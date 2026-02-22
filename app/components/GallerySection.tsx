@@ -29,12 +29,12 @@ const mediaItems = [
   { id: 21, type: "video", src: "/odm-groove-sports-leisure-facilities.mp4", category: "amenities", title: "Sports Lounge", thumb: "/Bar/odm-groove-outdoor-bar-nigeria.jpg" },
   { id: 22, type: "image", src: "/Room/odm-groove-hotel-room-bathroom.jpg", category: "rooms", title: "En-suite Bathroom" },
   { id: 23, type: "image", src: "/Room/odm-groove-hotel-room-wardrobe.jpg", category: "rooms", title: "Room Wardrobe" },
-  { id: 24, type: "image", src: "/hall/odm-groove-event-hall-front-view.jpg", category: "hall", title: "Event Hall Front View" },
-  { id: 25, type: "video", src: "/hall/odm-groove-event-hall-full-view.mp4", category: "hall", title: "Event Hall Full View", thumb: "/hall/odm-groove-event-hall-interior-view-1.jpg" },
-  { id: 26, type: "video", src: "/hall/odm-groove-event-hall-short-video.mp4", category: "hall", title: "Event Hall Quick Tour", thumb: "/hall/odm-groove-event-hall-front-view.jpg" },
-  { id: 27, type: "image", src: "/hall/odm-groove-event-hall-interior-view-1.jpg", category: "hall", title: "Event Hall Interior 1" },
-  { id: 28, type: "video", src: "/hall/odm-groove-event-hall-with-guests.mp4", category: "hall", title: "Event Hall With Guests", thumb: "/hall/odm-groove-event-hall-interior-view-2.jpg" },
-  { id: 29, type: "image", src: "/hall/odm-groove-event-hall-interior-view-2.jpg", category: "hall", title: "Event Hall Interior 2" },
+  { id: 24, type: "image", src: "/Hall/odm-groove-event-hall-front-view.jpg", category: "hall", title: "Event Hall Front View" },
+  { id: 25, type: "video", src: "/Hall/odm-groove-event-hall-full-view.mp4", category: "hall", title: "Event Hall Full View", thumb: "/Hall/odm-groove-event-hall-interior-view-1.jpg" },
+  { id: 26, type: "video", src: "/Hall/odm-groove-event-hall-short-video.mp4", category: "hall", title: "Event Hall Quick Tour", thumb: "/Hall/odm-groove-event-hall-front-view.jpg" },
+  { id: 27, type: "image", src: "/Hall/odm-groove-event-hall-interior-view-1.jpg", category: "hall", title: "Event Hall Interior 1" },
+  { id: 28, type: "video", src: "/Hall/odm-groove-event-hall-with-guests.mp4", category: "hall", title: "Event Hall With Guests", thumb: "/Hall/odm-groove-event-hall-interior-view-2.jpg" },
+  { id: 29, type: "image", src: "/Hall/odm-groove-event-hall-interior-view-2.jpg", category: "hall", title: "Event Hall Interior 2" },
 ];
 
 const categories = ["all", "exterior", "rooms", "hall", "bar", "amenities", "nightlife"];

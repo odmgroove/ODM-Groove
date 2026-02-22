@@ -58,7 +58,7 @@ export default function EventsSection() {
 
             <div className="flex flex-col sm:flex-row gap-4">
               <a 
-                href="https://wa.me/234?text=I%20would%20like%20to%20inquire%20about%20booking%20the%20Event%20Hall"
+                href="https://wa.me/2347061514120?text=I%20would%20like%20to%20inquire%20about%20booking%20the%20Event%20Hall"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-gold flex items-center justify-center gap-2 group"
@@ -73,7 +73,7 @@ export default function EventsSection() {
           <div className="order-1 lg:order-2 relative h-[500px] lg:h-[600px] w-full">
             <div className="absolute top-0 right-0 w-[80%] h-[80%] rounded-sm overflow-hidden shadow-2xl z-20 border border-[var(--dark-border)]">
               <Image
-                src="/hall/odm-groove-event-hall-interior-view-1.jpg"
+                src="/Hall/odm-groove-event-hall-interior-view-1.jpg"
                 alt="VIP Event Lounge"
                 fill
                 className="object-cover"
@@ -83,7 +83,7 @@ export default function EventsSection() {
             
             <div className="absolute bottom-0 left-0 w-[60%] h-[50%] rounded-sm overflow-hidden shadow-2xl z-30 border-4 border-[var(--background)]">
               <Image
-                src="/hall/odm-groove-event-hall-front-view.jpg"
+                src="/Hall/odm-groove-event-hall-front-view.jpg"
                 alt="Outdoor Gathering Space"
                 fill
                 className="object-cover"
