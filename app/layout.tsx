@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://odmgroove.com"),
+  metadataBase: new URL("https://odm-groove.vercel.app"),
   title: {
     default: "ODM Groove Hotel & Event Hall | Ijoko, Ogun State Nigeria",
     template: "%s | ODM Groove Hotel",
@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     google: "google-site-verification-placeholder",
   },
   alternates: {
-    canonical: "https://odmgroove.com",
+    canonical: "https://odm-groove.vercel.app",
   },
 };
 
@@ -78,12 +78,12 @@ const localBusinessSchema = {
   name: "ODM Groove Hotel & Event Hall",
   alternateName: "ODM Groove Limited",
   legalName: "ODM Groove Limited",
-  url: "https://odmgroove.com",
-  logo: "https://odmgroove.com/logo.png",
+  url: "https://odm-groove.vercel.app",
+  logo: "https://odm-groove.vercel.app/logo.png",
   image: [
-    "https://odmgroove.com/odm-groove-hotel-exterior-daytime.jpg",
-    "https://odmgroove.com/odm-groove-hotel-front-view.jpg",
-    "https://odmgroove.com/Room/odm-groove-hotel-room-1.jpg",
+    "https://odm-groove.vercel.app/odm-groove-hotel-exterior-daytime.jpg",
+    "https://odm-groove.vercel.app/odm-groove-hotel-front-view.jpg",
+    "https://odm-groove.vercel.app/Room/odm-groove-hotel-room-1.jpg",
   ],
   description:
     "ODM Groove Limited is a premium boutique hotel and event hall located in Ijoko Ogbayo, Ogun State, Nigeria. Offering comfortable standard and deluxe rooms with free breakfast, WiFi, Netflix, DSTV, swimming pool, outdoor bar, rooftop lounge, and a versatile event hall.",
