@@ -209,39 +209,39 @@ function BookingCard({ name, email, phone, roomLabel, roomPrice, checkIn, checkO
   return (
     <div
       id="booking-card"
-      className="w-[480px] bg-[#0a0a0a] text-white font-sans p-0 rounded-2xl overflow-hidden"
+      className="w-full max-w-[480px] bg-[#0a0a0a] text-white font-sans p-0 rounded-2xl overflow-hidden mx-auto"
       style={{ fontFamily: "'Inter', sans-serif" }}
     >
       {/* Gold top bar */}
       <div className="h-2 w-full" style={{ background: "linear-gradient(90deg, #a08030, #c8a84b, #e2c97e, #c8a84b, #a08030)" }} />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-8 py-5 border-b border-white/10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between px-5 sm:px-8 py-4 sm:py-5 border-b border-white/10 gap-3 sm:gap-0">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.3em] text-[#8a8072]">Booking Confirmation</div>
-          <div className="font-bold text-[#c8a84b] text-xl mt-1" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <div className="text-[9px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[#8a8072]">Booking Confirmation</div>
+          <div className="font-bold text-[#c8a84b] text-lg sm:text-xl mt-1" style={{ fontFamily: "'Playfair Display', serif" }}>
             ODM Groove Hotel
           </div>
-          <div className="text-[10px] text-[#6b6257] mt-0.5">Ijoko Ogbayo, Ogun State, Nigeria</div>
+          <div className="text-[9px] sm:text-[10px] text-[#6b6257] mt-0.5">Ijoko Ogbayo, Ogun State, Nigeria</div>
         </div>
-        <div className="text-right">
-          <div className="text-[9px] uppercase tracking-widest text-[#6b6257]">Ref No.</div>
+        <div className="text-left sm:text-right">
+          <div className="text-[8.5px] sm:text-[9px] uppercase tracking-widest text-[#6b6257]">Ref No.</div>
           <div className="text-xs font-bold text-[#c8a84b] mt-0.5">{bookingRef}</div>
-          <div className="text-[9px] text-[#6b6257] mt-1">
+          <div className="text-[8.5px] sm:text-[9px] text-[#6b6257] mt-1">
             Issued: {new Date().toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" })}
           </div>
         </div>
       </div>
 
       {/* Body */}
-      <div className="px-8 py-6 space-y-5">
+      <div className="px-5 sm:px-8 py-5 sm:py-6 space-y-5">
         {/* Guest info */}
         <div>
-          <div className="text-[9px] uppercase tracking-[0.25em] text-[#8a8072] mb-2">Guest Details</div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-            <div><div className="text-[9px] text-[#6b6257]">Full Name</div><div className="text-sm font-semibold text-white mt-0.5">{name}</div></div>
-            <div><div className="text-[9px] text-[#6b6257]">Phone</div><div className="text-sm font-semibold text-white mt-0.5">{phone}</div></div>
-            <div className="col-span-2"><div className="text-[9px] text-[#6b6257]">Email</div><div className="text-sm font-semibold text-white mt-0.5">{email}</div></div>
+          <div className="text-[8.5px] sm:text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#8a8072] mb-2">Guest Details</div>
+          <div className="grid grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3 sm:gap-y-2">
+            <div className="col-span-1"><div className="text-[8.5px] sm:text-[9px] text-[#6b6257]">Full Name</div><div className="text-[13px] sm:text-sm font-semibold text-white mt-0.5">{name || "-"}</div></div>
+            <div className="col-span-1"><div className="text-[8.5px] sm:text-[9px] text-[#6b6257]">Phone</div><div className="text-[13px] sm:text-sm font-semibold text-white mt-0.5">{phone || "-"}</div></div>
+            <div className="col-span-2 break-all sm:break-normal"><div className="text-[8.5px] sm:text-[9px] text-[#6b6257]">Email</div><div className="text-[13px] sm:text-sm font-semibold text-white mt-0.5">{email || "-"}</div></div>
           </div>
         </div>
 
@@ -250,38 +250,41 @@ function BookingCard({ name, email, phone, roomLabel, roomPrice, checkIn, checkO
 
         {/* Booking details */}
         <div>
-          <div className="text-[9px] uppercase tracking-[0.25em] text-[#8a8072] mb-2">Booking Details</div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div className="text-[8.5px] sm:text-[9px] uppercase tracking-[0.2em] sm:tracking-[0.25em] text-[#8a8072] mb-2">Booking Details</div>
+          <div className="grid grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-4 sm:gap-y-3">
             <div className="col-span-2">
-              <div className="text-[9px] text-[#6b6257]">Room</div>
-              <div className="text-base font-bold text-[#c8a84b] mt-0.5" style={{ fontFamily: "'Playfair Display', serif" }}>{roomLabel}</div>
-              <div className="text-[10px] text-[#8a8072]">{fmtPrice(roomPrice)} / night</div>
+              <div className="text-[8.5px] sm:text-[9px] text-[#6b6257]">Room</div>
+              <div className="text-sm sm:text-base font-bold text-[#c8a84b] mt-0.5" style={{ fontFamily: "'Playfair Display', serif" }}>{roomLabel}</div>
+              <div className="text-[9px] sm:text-[10px] text-[#8a8072]">{fmtPrice(roomPrice)} / night</div>
             </div>
             <div>
-              <div className="text-[9px] text-[#6b6257]">Check-in</div>
-              <div className="text-sm font-semibold text-white mt-0.5">{fmtDateFull(checkIn)}</div>
+              <div className="text-[8.5px] sm:text-[9px] text-[#6b6257]">Check-in</div>
+              <div className="text-[13px] sm:text-sm font-semibold text-white mt-0.5">{fmtDateFull(checkIn)}</div>
             </div>
             <div>
-              <div className="text-[9px] text-[#6b6257]">Check-out</div>
-              <div className="text-sm font-semibold text-white mt-0.5">{fmtDateFull(checkOut)}</div>
+              <div className="text-[8.5px] sm:text-[9px] text-[#6b6257]">Check-out</div>
+              <div className="text-[13px] sm:text-sm font-semibold text-white mt-0.5">{fmtDateFull(checkOut)}</div>
             </div>
             <div>
-              <div className="text-[9px] text-[#6b6257]">Duration</div>
-              <div className="text-sm font-semibold text-white mt-0.5">{nights} night{nights !== 1 ? "s" : ""}</div>
+              <div className="text-[8.5px] sm:text-[9px] text-[#6b6257]">Duration</div>
+              <div className="text-[13px] sm:text-sm font-semibold text-white mt-0.5">{nights} night{nights !== 1 ? "s" : ""}</div>
             </div>
             <div>
-              <div className="text-[9px] text-[#6b6257]">Est. Total</div>
-              <div className="text-sm font-bold text-[#c8a84b] mt-0.5">{fmtPrice(roomPrice * nights)}</div>
+              <div className="text-[8.5px] sm:text-[9px] text-[#6b6257]">Est. Total</div>
+              <div className="text-[13px] sm:text-sm font-bold text-[#c8a84b] mt-0.5">{fmtPrice(roomPrice * nights)}</div>
             </div>
           </div>
         </div>
 
         {/* Payment status banner */}
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex items-start gap-3">
-          <Clock size={16} className="text-amber-400 mt-0.5 shrink-0" />
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex flex-col sm:flex-row items-start gap-2 sm:gap-3">
+          <Clock size={16} className="text-amber-400 mt-0.5 shrink-0 hidden sm:block" />
           <div>
-            <div className="text-xs font-bold text-amber-300 uppercase tracking-wider">Payment Pending</div>
-            <div className="text-[10px] text-amber-200/70 mt-0.5">
+            <div className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+              <Clock size={14} className="sm:hidden" />
+              Payment Pending
+            </div>
+            <div className="text-[10px] text-amber-200/70 mt-1 sm:mt-0.5">
               Payment has not been processed yet. Our front desk will contact you shortly to arrange payment and confirm your reservation.
             </div>
           </div>
@@ -289,9 +292,9 @@ function BookingCard({ name, email, phone, roomLabel, roomPrice, checkIn, checkO
       </div>
 
       {/* Footer */}
-      <div className="px-8 py-4 border-t border-white/10 flex items-center justify-between bg-[#111111]">
-        <div className="text-[9px] text-[#6b6257]">📞 +234 706 151 4120  |  ✉️ odmgroove@gmail.com</div>
-        <div className="text-[9px] text-[#c8a84b] font-semibold">odmgroove.vercel.app</div>
+      <div className="px-5 sm:px-8 py-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between bg-[#111111] gap-2 sm:gap-0">
+        <div className="text-[8.5px] sm:text-[9px] text-[#6b6257]">📞 +234 706 151 4120  |  ✉️ odmgroove@gmail.com</div>
+        <div className="text-[8.5px] sm:text-[9px] text-[#c8a84b] font-semibold">odmgroove.vercel.app</div>
       </div>
 
       {/* Gold bottom bar */}
@@ -600,8 +603,8 @@ export default function BookingModal({ isOpen, onClose, defaultRoom = "cedar" }:
           </div>
 
           {/* Booking card */}
-          <div className="w-full overflow-x-auto" ref={cardRef}>
-            <div className="min-w-max mx-auto">
+          <div className="w-full flex justify-center py-2" ref={cardRef}>
+            <div className="w-full px-4 sm:px-0">
               <BookingCard
                 name={name} email={email} phone={phone}
                 roomLabel={roomObj.label} roomPrice={roomObj.price}
