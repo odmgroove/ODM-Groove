@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X, Phone } from "lucide-react";
-import ThemeToggle from "./ThemeToggle";
+import { Menu, X, Phone, UtensilsCrossed } from "lucide-react";
 
 const navLinks = [
   { label: "Home", href: "/#home" },
@@ -42,8 +41,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [handleScroll]);
 
-
-
   return (
     <>
       <nav
@@ -61,19 +58,18 @@ export default function Navbar() {
             className="flex items-center gap-3 group"
             aria-label="ODM Groove - Go to Home"
           >
-            
             <div className="flex flex-col gap-1 items-center justify-center leading-tight">
               <span className="relative inline-block w-24 h-4 md:w-36 md:h-6">
-              <Image
-                src="/logo.png"
-                alt="ODM Groove Hotel logo"
-                fill
-                className="object-contain"
-                priority
-              />
-            </span>
+                <Image
+                  src="/logo.png"
+                  alt="ODM Groove Hotel logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              </span>
               <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--warm-gray)] font-medium">
-                Hotel & Event Hall
+                Hotel &amp; Event Hall
               </span>
             </div>
           </Link>
@@ -88,7 +84,7 @@ export default function Navbar() {
                   <Link
                     role="menuitem"
                     href={link.href}
-                    className={`px-4 py-2 text-sm font-medium tracking-wide transition-all duration-200 relative group ${
+                    className={`px-3 py-2 text-sm font-medium tracking-wide transition-all duration-200 relative group ${
                       isActive
                         ? "text-[var(--gold)]"
                         : "text-[var(--off-white)] hover:text-[var(--gold)]"
@@ -107,15 +103,18 @@ export default function Navbar() {
           </ul>
 
           {/* Desktop CTA */}
-          <div className="hidden lg:flex items-center gap-3">
-            <a
-              href="tel:+2347061514120"
-              className="flex items-center gap-2 text-sm text-[var(--warm-gray)] hover:text-[var(--gold)] transition-colors"
-              aria-label="Call ODM Groove Hotel"
+          <div className="hidden lg:flex items-center gap-2">
+            
+            {/* Menu & Order icon-button */}
+            <Link
+              href="/menu"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[var(--gold)] border border-[var(--gold)]/40 rounded-full hover:bg-[var(--gold)]/10 transition-all duration-200"
+              aria-label="Menu & Order"
+              title="Menu & Order"
             >
-              <Phone size={14} />
-              <span className="hidden xl:inline">Call Us</span>
-            </a>
+              <UtensilsCrossed size={14} />
+              <span className="hidden xl:inline">Order</span>
+            </Link>
             <Link
               href="/#rooms"
               className="btn-gold text-xs px-5 py-2.5 inline-block text-center"
@@ -124,15 +123,24 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Hamburger */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="lg:hidden p-2 text-[var(--off-white)] hover:text-[var(--gold)] transition-colors"
-            aria-expanded={mobileOpen}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile: Menu & Order icon + Hamburger */}
+          <div className="lg:hidden flex items-center gap-2">
+            <Link
+              href="/menu"
+              className="flex items-center gap-1.5 p-2 text-[var(--gold)] hover:text-[var(--gold-light)] transition-colors"
+              aria-label="Menu & Order"
+            >
+              <UtensilsCrossed size={20} />
+            </Link>
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 text-[var(--off-white)] hover:text-[var(--gold)] transition-colors"
+              aria-expanded={mobileOpen}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            >
+              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -157,37 +165,36 @@ export default function Navbar() {
           }`}
         >
           <div className="flex items-center justify-between p-5 border-b border-[var(--dark-border)]">
-             <Link
-            href="/#home"
-            className="flex items-center gap-3 group"
-            aria-label="ODM Groove - Go to Home"
-          >
-            
-            <div className="flex flex-col gap-1 items-center justify-center leading-tight">
-              <span className="relative inline-block w-24 h-4">
-              <Image
-                src="/logo.png"
-                alt="ODM Groove Hotel logo"
-                fill
-                className="object-contain"
-                priority
-              />
-            </span>
-              <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--warm-gray)] font-medium">
-                Hotel & Event Hall
-              </span>
-            </div>
-          </Link>
-             <button
-                onClick={() => setMobileOpen(false)}
-                className="text-[var(--warm-gray)] hover:text-[var(--off-white)] transition-colors"
-                aria-label="Close navigation drawer"
-              >
-                <X size={22} />
-              </button>
+            <Link
+              href="/#home"
+              className="flex items-center gap-3 group"
+              aria-label="ODM Groove - Go to Home"
+            >
+              <div className="flex flex-col gap-1 items-center justify-center leading-tight">
+                <span className="relative inline-block w-24 h-4">
+                  <Image
+                    src="/logo.png"
+                    alt="ODM Groove Hotel logo"
+                    fill
+                    className="object-contain"
+                    priority
+                  />
+                </span>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--warm-gray)] font-medium">
+                  Hotel &amp; Event Hall
+                </span>
+              </div>
+            </Link>
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="text-[var(--warm-gray)] hover:text-[var(--off-white)] transition-colors"
+              aria-label="Close navigation drawer"
+            >
+              <X size={22} />
+            </button>
           </div>
 
-          <nav className="flex-1 p-6">
+          <nav className="flex-1 p-6 overflow-y-auto">
             <ul className="space-y-1">
               {navLinks.map((link) => {
                 const id = link.href.replace("/#", "");
@@ -212,6 +219,15 @@ export default function Navbar() {
           </nav>
 
           <div className="p-6 border-t border-[var(--dark-border)] space-y-3">
+            {/* Menu & Order — prominent mobile CTA */}
+            <Link
+              href="/menu"
+              onClick={() => setMobileOpen(false)}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-sm border border-[var(--gold)] text-[var(--gold)] text-sm font-bold uppercase tracking-wider hover:bg-[var(--gold)]/10 transition-all"
+            >
+              <UtensilsCrossed size={15} />
+              Menu &amp; Order
+            </Link>
             <Link
               href="/#rooms"
               onClick={() => setMobileOpen(false)}
