@@ -27,7 +27,7 @@ const blogPosts = [
     date: "Feb 02, 2026",
     author: "Guest Relations",
     category: "Hospitality",
-    image: "/Room/odm-groove-hotel-room-4.jpg"
+    image: "/Room/odm-groove-hotel-room-40k-1.jpg"
   },
   {
     id: 3,

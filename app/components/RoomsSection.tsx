@@ -6,17 +6,27 @@ import {
   Wifi, Coffee, Tv, Waves, Star, Check, ArrowRight, BedDouble, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
-const standardImages = [
-  { src: "/Room/odm-groove-hotel-room-1.jpg", alt: "ODM Groove standard hotel room interior - Ijoko Ogun State" },
-  { src: "/Room/odm-groove-hotel-room-2.jpg", alt: "ODM Groove standard room bedroom view" },
-  { src: "/Room/odm-groove-hotel-room-3.jpg", alt: "ODM Groove hotel room with DSTV and Netflix" },
-  { src: "/Room/odm-groove-hotel-room-bathroom.jpg", alt: "ODM Groove hotel room en-suite bathroom" },
+const roomImages30k = [
+  { src: "/Room/odm-groove-hotel-room-30k-1.jpg", alt: "ODM Groove standard hotel room 30k interior" },
+  { src: "/Room/odm-groove-hotel-room-30k-2.jpg", alt: "ODM Groove 30k room bedroom view" },
+  { src: "/Room/odm-groove-hotel-room-30k-toilet-1.jpg", alt: "ODM Groove 30k hotel room toilet" },
+  { src: "/Room/odm-groove-hotel-room-30k-toilet-2.jpg", alt: "ODM Groove 30k hotel room toilet" },
 ];
-const deluxeImages = [
-  { src: "/Room/odm-groove-hotel-room-4.jpg", alt: "ODM Groove deluxe hotel room - premium accommodation Ogun State" },
-  { src: "/Room/odm-groove-hotel-room-3.jpg", alt: "ODM Groove deluxe room lounge area" },
-  { src: "/Room/odm-groove-hotel-room-wardrobe.jpg", alt: "ODM Groove deluxe room wardrobe" },
-  { src: "/Room/odm-groove-hotel-room-bathroom.jpg", alt: "ODM Groove deluxe bathroom with premium fittings" },
+
+const roomImages40k = [
+  { src: "/Room/odm-groove-hotel-room-40k-1.jpg", alt: "ODM Groove deluxe hotel room 40k interior" },
+  { src: "/Room/odm-groove-hotel-room-40k-2.jpg", alt: "ODM Groove 40k room bedroom view" },
+  { src: "/Room/odm-groove-hotel-room-40k-toilet-1.jpg", alt: "ODM Groove 40k hotel room toilet" },
+  { src: "/Room/odm-groove-hotel-room-40k-toilet-2.jpg", alt: "ODM Groove 40k hotel room toilet" },
+];
+
+const roomImages50k = [
+  { src: "/Room/odm-groove-hotel-room-50k-1.jpg", alt: "ODM Groove master suite 50k interior" },
+  { src: "/Room/odm-groove-hotel-room-50k-2.jpg", alt: "ODM Groove 50k room bedroom view" },
+  { src: "/Room/odm-groove-hotel-room-50k-3.jpg", alt: "ODM Groove 50k room interior view 3" },
+  { src: "/Room/odm-groove-hotel-room-50k-4.jpg", alt: "ODM Groove 50k room interior view 4" },
+  { src: "/Room/odm-groove-hotel-room-50k-5.jpg", alt: "ODM Groove 50k room interior view 5" },
+  { src: "/Room/odm-groove-hotel-room-50k-toilet-1.jpg", alt: "ODM Groove 50k hotel room toilet" },
 ];
 
 const baseAmenities = [
@@ -58,7 +68,7 @@ const rooms = roomData.map(room => ({
   price: room.price,
   currency: "₦",
   unit: "night",
-  images: room.type === "standard" ? standardImages : deluxeImages,
+  images: room.price === 30000 ? roomImages30k : (room.price === 40000 ? roomImages40k : roomImages50k),
   description: room.type === "standard" 
     ? "Our Standard Room offers all the comfort you need for a perfect stay — tastefully furnished with a plush bed, air conditioning, and smart TV. Wake up to a complimentary breakfast and enjoy seamless connectivity throughout your visit."
     : "Experience elevated luxury in our Deluxe Room — all the Standard benefits plus exclusive access to our stunning outdoor swimming pool. More space, premium toiletries, and a truly indulgent ambience perfect for that special staycation.",
@@ -87,7 +97,7 @@ function RoomDisplay({ room }: { room: typeof rooms[0] }) {
       itemType="https://schema.org/HotelRoom"
     >
       {/* Image gallery */}
-      <div className="relative aspect-[4/3] md:aspect-auto md:h-[400px] lg:h-[450px] w-full shrink-0 group">
+      <div className="relative aspect-[4/3] md:aspect-auto md:h-[400px] lg:h-[450px] w-full shrink-0 group overflow-hidden">
         <Image
           src={room.images[activeImage].src}
           alt={room.images[activeImage].alt}
@@ -97,7 +107,7 @@ function RoomDisplay({ room }: { room: typeof rooms[0] }) {
           itemProp="image"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
         {/* Thumbnail strip */}
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 w-max max-w-[90%] overflow-x-auto scrollbar-hide">

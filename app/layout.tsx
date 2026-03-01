@@ -83,7 +83,7 @@ const localBusinessSchema = {
   image: [
     "https://odmgroove.vercel.app/odm-groove-hotel-exterior-daytime.jpg",
     "https://odmgroove.vercel.app/odm-groove-hotel-front-view.jpg",
-    "https://odmgroove.vercel.app/Room/odm-groove-hotel-room-1.jpg",
+    "https://odmgroove.vercel.app/Room/odm-groove-hotel-room-30k-1.jpg",
   ],
   description:
     "ODM Groove Limited is a premium boutique hotel and event hall located in Ijoko Ogbayo, Ogun State, Nigeria. Offering comfortable standard and deluxe rooms with free breakfast, WiFi, Netflix, DSTV, swimming pool, outdoor bar, rooftop lounge, and a versatile event hall.",
