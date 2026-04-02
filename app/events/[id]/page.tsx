@@ -13,6 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!event) return {};
   const title = `${event.title} — ${event.subtitle} | ODM Groove`;
   const description = `${event.description} ${formatEventDate(event.date)} at ODM Groove, Ijoko, Ogun State. Tickets: ${event.ticketPrices.map((t) => `${t.label} ₦${t.price.toLocaleString()}`).join(", ")}.`;
+  const imageUrl = `https://odmgroove.vercel.app${event.posterImage || event.image}`;
   return {
     title,
     description,
@@ -23,8 +24,21 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       siteName: "ODM Groove Hotel & Event Hall",
       type: "website",
       locale: "en_NG",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 1200,
+          alt: `${event.title} Event Poster`,
+        },
+      ],
     },
-    twitter: { card: "summary_large_image", title, description },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
   };
 }
 
