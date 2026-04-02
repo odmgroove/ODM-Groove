@@ -141,6 +141,7 @@ const localBusinessSchema = {
 };
 
 import { ThemeProvider } from "./components/ThemeProvider";
+import EventCountdownBanner from "./components/EventCountdownBanner";
 
 export default function RootLayout({
   children,
@@ -164,6 +165,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased min-h-screen bg-[var(--black)] text-[var(--off-white)] transition-colors duration-300">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <EventCountdownBanner />
           {children}
         </ThemeProvider>
       </body>

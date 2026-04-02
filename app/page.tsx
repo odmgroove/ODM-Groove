@@ -14,6 +14,7 @@ import BookingCTASection from "./components/BookingCTASection";
 import Footer from "./components/Footer";
 import AIChatWidget from "./components/AIChatWidget";
 import BookingModal from "./components/BookingModal";
+import EventAnnouncementModal from "./components/EventAnnouncementModal";
 
 export default function Home() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -53,6 +54,9 @@ export default function Home() {
 
       {/* Footer */}
       <Footer />
+
+      {/* Event Announcement Modal — auto-shows for active upcoming events */}
+      <EventAnnouncementModal />
 
       {/* Floating Elements (Client Components) */}
       <AIChatWidget />
