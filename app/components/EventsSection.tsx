@@ -18,14 +18,8 @@ import {
   Flame,
   CheckCircle,
 } from "lucide-react";
-import {
-  getFeaturedEvent,
-  getUpcomingEvents,
-  formatEventDate,
-  getCategoryLabel,
-  type Event,
-} from "../lib/eventsData";
 import NotifyMeWidget from "./NotifyMeWidget";
+import { ParsedEvent } from "./EventAnnouncementModal";
 
 function useCountdown(targetDate: string) {
   const calcTime = () => {
@@ -60,15 +54,29 @@ function CountdownBlock({ value, label }: { value: number; label: string }) {
   );
 }
 
-function FeaturedEventHero({ event }: { event: Event }) {
+function formatEventDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-NG", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getCategoryLabel(cat: string) {
+  return cat.replace("-", " ");
+}
+
+function FeaturedEventHero({ event }: { event: ParsedEvent }) {
   const countdown = useCountdown(event.date);
   const [copied, setCopied] = useState(false);
 
-  const shareText = `🎉 ${event.title} — ${event.subtitle}!\n\n📅 ${formatEventDate(event.date)}\n📍 ${event.venue}\n🎟 ${event.ticketPrices.map((t) => `${t.label}: ₦${t.price.toLocaleString()}`).join(" | ")}\n\nReserve: ${event.contactNumbers[0]}\n\n${event.hashtags.join(" ")}\n\nhttps://odmgroove.vercel.app/#events`;
+  const shareText = `🎉 ${event.title} — ${event.subtitle || ""}\n\n📅 ${formatEventDate(event.date)}\n📍 ${event.venue}\n🎟 ${event.ticketPrices.map((t) => `${t.label}: ₦${t.price.toLocaleString()}`).join(" | ")}\n\nReserve: ${event.contactNumbers[0]}\n\n${event.hashtags.join(" ")}\n\nhttps://odmgroove.vercel.app/#events`;
 
   const handleShare = async () => {
     if (navigator.share) {
-      try { await navigator.share({ title: `${event.title} — ${event.subtitle}`, text: shareText, url: "https://odmgroove.vercel.app/#events" }); } catch {}
+      try { await navigator.share({ title: `${event.title} — ${event.subtitle || ""}`, text: shareText, url: "https://odmgroove.vercel.app/#events" }); } catch {}
     } else {
       try { await navigator.clipboard.writeText(shareText); } catch {}
       setCopied(true);
@@ -76,7 +84,7 @@ function FeaturedEventHero({ event }: { event: Event }) {
     }
   };
 
-  const whatsappUrl = `https://wa.me/${event.whatsappNumber}?text=${encodeURIComponent(`Hi, I'd like to reserve a table for the ${event.title} ${event.subtitle} on ${formatEventDate(event.date)}`)}`;
+  const whatsappUrl = `https://wa.me/${event.whatsappNumber}?text=${encodeURIComponent(`Hi, I'd like to reserve a table for the ${event.title} ${event.subtitle || ""} on ${formatEventDate(event.date)}`)}`;
 
   return (
     <div className="relative rounded-sm overflow-hidden border border-[var(--dark-border)] mb-16">
@@ -96,16 +104,18 @@ function FeaturedEventHero({ event }: { event: Event }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
             <div>
-              {event.artists && (
+              {event.artists && event.artists.length > 0 && (
                 <p className="text-[var(--warm-gray)] text-xs tracking-[0.3em] uppercase font-medium mb-3">{event.artists.join(" × ")} presents</p>
               )}
               <h2 className="font-display text-4xl md:text-5xl xl:text-6xl font-bold text-[var(--off-white)] leading-tight mb-2" style={{ fontFamily: "Playfair Display, serif" }}>
                 {event.title}
               </h2>
-              <h3 className="font-display text-2xl md:text-3xl font-bold italic mb-6" style={{ fontFamily: "Playfair Display, serif", color: event.accentColor }}>
-                {event.subtitle}
-              </h3>
-              <p className="text-[var(--warm-gray)] text-base leading-relaxed mb-8 max-w-lg">{event.longDescription}</p>
+              {event.subtitle && (
+                <h3 className="font-display text-2xl md:text-3xl font-bold italic mb-6" style={{ fontFamily: "Playfair Display, serif", color: event.accentColor }}>
+                  {event.subtitle}
+                </h3>
+              )}
+              <p className="text-[var(--warm-gray)] text-base leading-relaxed mb-8 max-w-lg">{event.longDescription || event.description}</p>
 
               <div className="space-y-3 mb-8">
                 <div className="flex items-center gap-3 text-sm text-[var(--off-white)]/80">
@@ -122,7 +132,7 @@ function FeaturedEventHero({ event }: { event: Event }) {
                 </div>
               </div>
 
-              {event.extras && (
+              {event.extras && event.extras.length > 0 && (
                 <div className="space-y-2 mb-8">
                   {event.extras.map((extra, i) => (
                     <div key={i} className="flex items-center gap-2 text-sm text-[var(--warm-gray)]">
@@ -159,34 +169,38 @@ function FeaturedEventHero({ event }: { event: Event }) {
                 </div>
               )}
 
-              <div className="bg-[var(--dark)] border border-[var(--dark-border)] rounded-sm p-6">
-                <div className="flex items-center gap-2 mb-5">
-                  <Ticket size={14} className="text-[var(--gold)]" />
-                  <span className="text-[var(--gold)] text-xs uppercase tracking-[0.25em] font-semibold">Ticket Prices</span>
+              {event.ticketPrices.length > 0 && (
+                <div className="bg-[var(--dark)] border border-[var(--dark-border)] rounded-sm p-6">
+                  <div className="flex items-center gap-2 mb-5">
+                    <Ticket size={14} className="text-[var(--gold)]" />
+                    <span className="text-[var(--gold)] text-xs uppercase tracking-[0.25em] font-semibold">Ticket Prices</span>
+                  </div>
+                  <div className="space-y-0">
+                    {event.ticketPrices.map((t) => (
+                      <div key={t.label} className="flex justify-between items-center py-3 border-b border-[var(--dark-border)] last:border-0 last:pb-0">
+                        <span className="text-[var(--off-white)] font-medium">{t.label}</span>
+                        <span className="font-display text-2xl font-bold" style={{ fontFamily: "Playfair Display, serif", color: event.accentColor }}>
+                          ₦{t.price.toLocaleString()}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-0">
-                  {event.ticketPrices.map((t) => (
-                    <div key={t.label} className="flex justify-between items-center py-3 border-b border-[var(--dark-border)] last:border-0 last:pb-0">
-                      <span className="text-[var(--off-white)] font-medium">{t.label}</span>
-                      <span className="font-display text-2xl font-bold" style={{ fontFamily: "Playfair Display, serif", color: event.accentColor }}>
-                        ₦{t.price.toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )}
 
-              <div className="bg-[var(--dark)] border border-[var(--dark-border)] rounded-sm p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <Phone size={14} className="text-[var(--gold)]" />
-                  <span className="text-[var(--gold)] text-xs uppercase tracking-[0.25em] font-semibold">Room & Table Reservations</span>
+              {event.contactNumbers.length > 0 && (
+                <div className="bg-[var(--dark)] border border-[var(--dark-border)] rounded-sm p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Phone size={14} className="text-[var(--gold)]" />
+                    <span className="text-[var(--gold)] text-xs uppercase tracking-[0.25em] font-semibold">Room & Table Reservations</span>
+                  </div>
+                  <div className="space-y-2">
+                    {event.contactNumbers.map((num) => (
+                      <a key={num} href={`tel:+234${num.replace(/^0/, "")}`} className="block text-[var(--off-white)] font-semibold text-lg hover:text-[var(--gold)] transition-colors">{num}</a>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  {event.contactNumbers.map((num) => (
-                    <a key={num} href={`tel:+234${num.replace(/^0/, "")}`} className="block text-[var(--off-white)] font-semibold text-lg hover:text-[var(--gold)] transition-colors">{num}</a>
-                  ))}
-                </div>
-              </div>
+              )}
 
               <div className="flex flex-wrap gap-2">
                 {event.hashtags.map((tag) => (
@@ -201,7 +215,7 @@ function FeaturedEventHero({ event }: { event: Event }) {
   );
 }
 
-function EventCard({ event }: { event: Event }) {
+function EventCard({ event }: { event: ParsedEvent }) {
   const whatsappUrl = `https://wa.me/${event.whatsappNumber}?text=${encodeURIComponent(`Hi, I'd like to get more info about ${event.title} on ${formatEventDate(event.date)}`)}`;
   return (
     <div className="group bg-[var(--dark-card)] border border-[var(--dark-border)] rounded-sm overflow-hidden hover:border-[var(--gold)]/30 transition-all duration-300">
@@ -209,11 +223,12 @@ function EventCard({ event }: { event: Event }) {
       {/* Poster thumbnail */}
       {event.image && (
         <Link href={`/events/${event.id}`} className="block overflow-hidden relative h-44">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={event.image}
             alt={`${event.title} poster`}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            fill
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 33vw"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--dark-card)] via-transparent to-transparent" />
         </Link>
@@ -228,7 +243,9 @@ function EventCard({ event }: { event: Event }) {
         <p className="text-[var(--warm-gray)] text-sm leading-relaxed mb-5 line-clamp-2">{event.description}</p>
         <div className="space-y-2 mb-5 text-xs text-[var(--warm-gray)]">
           <div className="flex items-center gap-2"><Calendar size={12} className="text-[var(--gold)]" />{formatEventDate(event.date)}</div>
-          <div className="flex items-center gap-2"><Ticket size={12} className="text-[var(--gold)]" />{event.ticketPrices.map((t) => `${t.label}: ₦${t.price.toLocaleString()}`).join(" · ")}</div>
+          {event.ticketPrices.length > 0 && (
+            <div className="flex items-center gap-2"><Ticket size={12} className="text-[var(--gold)]" />{event.ticketPrices.map((t) => `${t.label}: ₦${t.price.toLocaleString()}`).join(" · ")}</div>
+          )}
         </div>
         <div className="flex gap-3">
           <Link href={`/events/${event.id}`} className="flex items-center gap-1.5 text-sm font-semibold text-[var(--off-white)] hover:text-[var(--gold)] transition-colors">
@@ -242,9 +259,54 @@ function EventCard({ event }: { event: Event }) {
     </div>
   );
 }
+
 export default function EventsSection() {
-  const featuredEvent = getFeaturedEvent();
-  const upcomingEvents = getUpcomingEvents().filter((e) => !e.featured);
+  const [events, setEvents] = useState<ParsedEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [pastEvents, setPastEvents] = useState<ParsedEvent[]>([]);
+
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const res = await fetch("/api/events?status=all");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        
+        const parsed: ParsedEvent[] = data.map((e: any) => ({
+          ...e,
+          ticketPrices: (() => { try { return JSON.parse(e.ticketPrices); } catch { return []; } })(),
+          contactNumbers: e.contactNumbers.split(",").map((s: string) => s.trim()),
+          hashtags: e.hashtags.split(",").map((s: string) => s.trim()),
+          artists: e.artists ? e.artists.split(",").map((s: string) => s.trim()) : null,
+          extras: e.extras ? e.extras.split(",").map((s: string) => s.trim()) : null,
+        }));
+
+        // Active = events that haven't ended yet (hide 2 hours after start)
+        const active = parsed.filter(event => {
+          const startMs = new Date(event.date).getTime();
+          return Date.now() < startMs + 2 * 60 * 60 * 1000;
+        });
+
+        const past = parsed
+          .filter(event => new Date(event.date).getTime() < Date.now())
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .slice(0, 3);
+
+        setEvents(active);
+        setPastEvents(past);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    }
+    fetchEvents();
+  }, []);
+
+  const featuredEvent = events.find(e => e.featured);
+  const upcomingEvents = events.filter((e) => e.id !== featuredEvent?.id);
+  const hasUpcoming = featuredEvent || upcomingEvents.length > 0;
 
   return (
     <section id="events" className="relative section-padding bg-[var(--black)] overflow-hidden" aria-labelledby="events-heading">
@@ -253,44 +315,78 @@ export default function EventsSection() {
         <div className="text-center mb-14">
           <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-10 bg-[var(--gold)]/60" />
-            <span className="text-[var(--gold)] text-xs tracking-[0.3em] uppercase font-medium">Events & Experiences</span>
+            <span className="text-[var(--gold)] text-xs tracking-[0.3em] uppercase font-medium">Events &amp; Experiences</span>
             <div className="h-px w-10 bg-[var(--gold)]/60" />
           </div>
-          <h2 id="events-heading" className="font-display text-3xl md:text-5xl font-bold text-[var(--off-white)] leading-tight" style={{ fontFamily: "Playfair Display, serif" }}>
+          <h2 id="events-heading" className="font-display text-3xl md:text-5xl font-bold text-[var(--off-white)] leading-tight mb-6" style={{ fontFamily: "Playfair Display, serif" }}>
             What&apos;s <span className="gradient-text italic">Happening</span> at ODM Groove
           </h2>
+          <Link href="/events" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[var(--dark-card)] border border-[var(--gold)]/30 text-[var(--gold)] text-xs font-bold uppercase tracking-wider hover:border-[var(--gold)] hover:bg-[var(--gold)]/10 transition-all">
+            View All Events <ArrowRight size={13} />
+          </Link>
         </div>
 
-        {featuredEvent && <FeaturedEventHero event={featuredEvent} />}
-
-        {upcomingEvents.length > 0 && (
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--gold)]"></div>
+          </div>
+        ) : (
           <>
-            <div className="flex items-center gap-3 mb-8">
-              <span className="text-[var(--gold)] text-xs tracking-[0.3em] uppercase font-medium">More Coming Up</span>
-              <div className="h-px flex-1 bg-[var(--dark-border)]" />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-              {upcomingEvents.map((event) => <EventCard key={event.id} event={event} />)}
-            </div>
+            {featuredEvent && <FeaturedEventHero event={featuredEvent} />}
+
+            {upcomingEvents.length > 0 && (
+              <>
+                <div className="flex items-center gap-3 mb-8">
+                  <span className="text-[var(--gold)] text-xs tracking-[0.3em] uppercase font-medium">More Coming Up</span>
+                  <div className="h-px flex-1 bg-[var(--dark-border)]" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+                  {upcomingEvents.map((event) => <EventCard key={event.id} event={event} />)}
+                </div>
+              </>
+            )}
+
+            {!hasUpcoming && (
+              <div className="mb-16">
+                {pastEvents.length > 0 ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-6">
+                      <span className="text-[var(--warm-gray)] text-xs tracking-[0.3em] uppercase font-medium">Recent Past Events</span>
+                      <div className="h-px flex-1 bg-[var(--dark-border)]" />
+                      <Link href="/events" className="text-[var(--gold)] text-xs font-bold uppercase tracking-wider hover:underline flex items-center gap-1">
+                        See All <ArrowRight size={11} />
+                      </Link>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-75">
+                      {pastEvents.map((event) => <EventCard key={event.id} event={event} />)}
+                    </div>
+                    <div className="text-center mt-10">
+                      <p className="text-[var(--warm-gray)] text-sm mb-4">No upcoming events right now. Be the first to know when the next one drops.</p>
+                      <div className="max-w-sm mx-auto">
+                        <NotifyMeWidget compact />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-20 text-[var(--warm-gray)]">
+                    <Calendar size={40} className="mx-auto mb-4 opacity-30" />
+                    <p className="text-lg font-medium mb-2">No upcoming events right now</p>
+                    <p className="text-sm mb-8">Be the first to know when the next one drops.</p>
+                    <div className="max-w-sm mx-auto">
+                      <NotifyMeWidget compact />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Notify Me strip — shown when there ARE upcoming events too */}
+            {(featuredEvent || upcomingEvents.length > 0) && (
+              <div className="mb-16 max-w-xl mx-auto">
+                <NotifyMeWidget compact />
+              </div>
+            )}
           </>
-        )}
-
-        {!featuredEvent && upcomingEvents.length === 0 && (
-          <div className="text-center py-20 text-[var(--warm-gray)]">
-            <Calendar size={40} className="mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-medium mb-2">No upcoming events right now</p>
-            <p className="text-sm mb-8">Be the first to know when the next one drops.</p>
-            <div className="max-w-sm mx-auto">
-              <NotifyMeWidget compact />
-            </div>
-          </div>
-        )}
-
-        {/* Notify Me strip — shown when there ARE upcoming events too */}
-        {(featuredEvent || upcomingEvents.length > 0) && (
-          <div className="mb-16 max-w-xl mx-auto">
-            <NotifyMeWidget compact />
-          </div>
         )}
 
         {/* ── Event Hall / Venue Rental ──────────────────────────────────────── */}

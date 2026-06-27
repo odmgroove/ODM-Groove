@@ -1,0 +1,275 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Auth ──────────────────────────────────────────────────────────────────────
+
+model AdminUser {
+  id               String               @id @default(cuid())
+  email            String               @unique
+  name             String?
+  password         String               // bcrypt-hashed
+  isSuperAdmin     Boolean              @default(false)
+  permissions      String?              // JSON: ["view:kitchen","view:bar","create:orders","manage:inventory","view:analytics","manage:staff","view:shifts","manage:rooms","manage:events","manage:blog","manage:gallery","manage:faqs","view:bookings","manage:ai"]
+  resetToken       String?
+  resetTokenExpiry DateTime?
+  ordersHandled    FoodOrder[]
+  transfers        InventoryTransfer[]
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+}
+
+// ─── Core Business ─────────────────────────────────────────────────────────────
+
+model Event {
+  id              String   @id @default(cuid())
+  title           String
+  subtitle        String?
+  description     String
+  longDescription String?
+  date            DateTime
+  endTime         String
+  venue           String
+  category        String
+  status          String   @default("upcoming")
+  featured        Boolean  @default(false)
+  ticketPrices    String   // JSON: [{"label":"Guys","price":5000}]
+  contactNumbers  String   // comma-separated
+  hashtags        String   // comma-separated
+  whatsappNumber  String
+  image           String?
+  posterImage     String?
+  accentColor     String
+  artists         String?  // comma-separated
+  ageLimit        Int?
+  extras          String?  // comma-separated
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Booking {
+  id          String    @id @default(cuid())
+  name        String
+  email       String?
+  phone       String
+  eventDate   DateTime?
+  type        String    @default("hall") // "hall", "table", "room"
+  guests      Int?
+  status      String    @default("pending") // "pending", "confirmed", "cancelled"
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Subscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?
+  content   String
+  rating    Int      @default(5)
+  avatar    String?
+  images    String?  // JSON array of image URLs
+  visible   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FAQ {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GalleryImage {
+  id        String   @id @default(cuid())
+  url       String
+  caption   String?
+  category  String?  // "event", "venue", "rooms", "pool"
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Float
+  capacity    Int
+  features    String   // comma-separated
+  image       String?
+  available   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MenuItem {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  costPrice   Float        @default(0) // Cost to produce — for profit/loss calculation
+  category    String
+  subcategory String?
+  emoji       String?
+  tag         String?      // "popular", "new", "vip"
+  image       String?
+  available   Boolean      @default(true)
+  order       Int          @default(0)
+  recipe      MenuRecipe[] // Recipe mapping for automatic inventory deduction
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model MenuRecipe {
+  id              String        @id @default(cuid())
+  menuItem        MenuItem      @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+  menuItemId      String
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  inventoryItemId String
+  quantityRequired Float        // How many units of inventoryItem to deduct (e.g. 2 eggs)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([menuItemId, inventoryItemId])
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?
+  content     String   // HTML or Markdown
+  coverImage  String?
+  author      String   @default("ODM Groove")
+  published   Boolean  @default(false)
+  tags        String?  // comma-separated
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AiKnowledge {
+  id        String   @id @default(cuid())
+  question  String?  // The suggestion text shown to users in the chat widget
+  keywords  String   // comma-separated trigger words
+  response  String   // the bot's reply
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─── ERP: Inventory ────────────────────────────────────────────────────────────
+
+model InventoryItem {
+  id                   String              @id @default(cuid())
+  name                 String
+  sku                  String?             @unique // e.g. "BAR-STAR-33CL"
+  category             String              // "Drinks", "Food Supplies", "Pool", "Snooker", "Toiletries", "Other"
+  unit                 String              @default("pcs") // "pcs", "bottles", "litres", "kg", "sets"
+  purchaseUnit         String              @default("crates") // "crates", "cartons", "packs"
+  unitsPerPurchaseUnit Int                 @default(1) // E.g. 24 bottles per crate
+  costPrice            Float               @default(0)
+  sellingPrice         Float               @default(0)
+  mainStoreCount       Int                 @default(0) // Bulk inventory in back room — admin controlled
+  frontStoreCount      Int                 @default(0) // Active stock at Bar/Kitchen — deducted on sale
+  lowStockAlert        Int                 @default(5) // Alert when frontStoreCount <= this
+  linkedMenuItemId     String?             // Optional link to MenuItem
+  available            Boolean             @default(true)
+  transfers            InventoryTransfer[]
+  locationStocks       ItemLocationStock[] // Per-location stock (VIP, Rooftop, Main Bar)
+  recipeUses           MenuRecipe[]        // Recipes that require this item
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+}
+
+model InventoryTransfer {
+  id             String        @id @default(cuid())
+  item           InventoryItem @relation(fields: [itemId], references: [id])
+  itemId         String
+  quantity       Int
+  direction      String        // "store_to_front" | "front_to_store" | "adjustment" | "receive" | "location_transfer"
+  note           String?       // e.g. "New supplier delivery — 24 bottles Hennessy"
+  fromLocationId String?       // Source location (for location-to-location transfers)
+  toLocationId   String?       // Target location (for location-to-location transfers)
+  transferredBy  AdminUser     @relation(fields: [userId], references: [id])
+  userId         String
+  createdAt      DateTime      @default(now())
+}
+
+// ─── Store Locations ───────────────────────────────────────────────────────────
+
+model StoreLocation {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g. "Main Bar", "VIP Lounge", "Rooftop"
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stocks      ItemLocationStock[]
+}
+
+model ItemLocationStock {
+  id              String        @id @default(cuid())
+  inventoryItemId String
+  locationId      String
+  quantity        Int           @default(0)
+
+  item            InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  location        StoreLocation @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([inventoryItemId, locationId])
+}
+
+// ─── ERP: POS Orders & Shifts ─────────────────────────────────────────────────
+
+model Shift {
+  id            String      @id @default(cuid())
+  staffId       String
+  staffName     String?
+  department    String?     // "Bar", "Kitchen", etc.
+  startTime     DateTime    @default(now())
+  endTime       DateTime?
+  cashTotal     Float       @default(0)
+  posTotal      Float       @default(0)
+  transferTotal Float       @default(0)
+  orders        FoodOrder[]
+  createdAt     DateTime    @default(now())
+}
+
+model FoodOrder {
+  id            String     @id @default(cuid())
+  ref           String     @unique           // e.g. "ODM-A4B2"
+  customerName  String
+  type          String                       // "table" | "takeaway" | "walk-in" | "website"
+  department    String                       // "Kitchen" | "Bar" | "Pool" | "Snooker"
+  location      String?                      // Table number or delivery note
+  message       String?                      // Special instructions
+  items         String                       // JSON: [{id, name, qty, unitPrice, unitCost, category}]
+  totalRevenue  Float
+  totalCost     Float
+  profit        Float
+  payment       String     @default("unpaid") // "unpaid" | "cash" | "transfer" | "pos"
+  status        String     @default("pending") // "pending" | "preparing" | "open_tab" | "completed" | "cancelled"
+  source        String     @default("website")  // "website" | "dashboard"
+  shiftId       String?
+  shift         Shift?     @relation(fields: [shiftId], references: [id])
+  createdBy     AdminUser? @relation(fields: [createdById], references: [id])
+  createdById   String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}

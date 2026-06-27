@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Menu, X, Phone, UtensilsCrossed } from "lucide-react";
 
 const navLinks = [
@@ -10,19 +11,23 @@ const navLinks = [
   { label: "Our Story", href: "/#about" },
   { label: "Rooms", href: "/#rooms" },
   { label: "Amenities", href: "/#amenities" },
-  { label: "Event Hall", href: "/#events" },
+  { label: "Events", href: "/events" },
   { label: "Gallery", href: "/#gallery" },
   { label: "Blog", href: "/blog" },
-  { label: "Contact", href: "#contact" },
+  { label: "Contact", href: "/#contact" },
 ];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const pathname = usePathname();
 
   const handleScroll = useCallback(() => {
     setScrolled(window.scrollY > 60);
+    
+    // Only run scroll spy on the homepage
+    if (pathname !== "/") return;
     const sections = navLinks.map((l) => l.href.split("#")[1]).filter(Boolean);
     let current = "home";
     for (const id of [...sections].reverse()) {
@@ -38,8 +43,10 @@ export default function Navbar() {
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll, { passive: true });
+    // Run once on mount or pathname change to set initial state
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  }, [handleScroll, pathname]);
 
   return (
     <>
@@ -78,7 +85,14 @@ export default function Navbar() {
           <ul className="hidden lg:flex items-center gap-1" role="menubar">
             {navLinks.map((link) => {
               const id = link.href.replace("/#", "");
-              const isActive = activeSection === id;
+              
+              let isActive = false;
+              if (link.href.startsWith("/#")) {
+                isActive = pathname === "/" && activeSection === id;
+              } else {
+                isActive = pathname.startsWith(link.href);
+              }
+
               return (
                 <li key={link.href} role="none">
                   <Link
@@ -115,12 +129,12 @@ export default function Navbar() {
               <UtensilsCrossed size={14} />
               <span className="hidden xl:inline">Order</span>
             </Link>
-            <Link
-              href="/#rooms"
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('open-booking-modal'))}
               className="btn-gold text-xs px-5 py-2.5 inline-block text-center"
             >
               Book Now
-            </Link>
+            </button>
           </div>
 
           {/* Mobile: Menu & Order icon + Hamburger */}
@@ -198,7 +212,13 @@ export default function Navbar() {
             <ul className="space-y-1">
               {navLinks.map((link) => {
                 const id = link.href.replace("/#", "");
-                const isActive = activeSection === id;
+                let isActive = false;
+                if (link.href.startsWith("/#")) {
+                  isActive = pathname === "/" && activeSection === id;
+                } else {
+                  isActive = pathname.startsWith(link.href);
+                }
+                
                 return (
                   <li key={link.href}>
                     <Link
@@ -228,19 +248,21 @@ export default function Navbar() {
               <UtensilsCrossed size={15} />
               Menu &amp; Order
             </Link>
-            <Link
-              href="/#rooms"
-              onClick={() => setMobileOpen(false)}
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                window.dispatchEvent(new CustomEvent('open-booking-modal'));
+              }}
               className="btn-gold w-full text-center block"
             >
               Book a Room
-            </Link>
+            </button>
             <Link
-              href="/#events"
+              href="/events"
               onClick={() => setMobileOpen(false)}
               className="btn-ghost w-full text-center block"
             >
-              Book an Event
+              View All Events
             </Link>
           </div>
         </div>

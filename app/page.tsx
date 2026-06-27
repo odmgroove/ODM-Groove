@@ -14,11 +14,13 @@ import BookingCTASection from "./components/BookingCTASection";
 import Footer from "./components/Footer";
 import AIChatWidget from "./components/AIChatWidget";
 import BookingModal from "./components/BookingModal";
+import HallEnquiryModal from "./components/HallEnquiryModal";
 import EventAnnouncementModal from "./components/EventAnnouncementModal";
 
 export default function Home() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [bookingRoomType, setBookingRoomType] = useState("standard");
+  const [isHallEnquiryModalOpen, setIsHallEnquiryModalOpen] = useState(false);
 
   useEffect(() => {
     const handleOpenBooking = (e: any) => {
@@ -27,8 +29,18 @@ export default function Home() {
       document.body.style.overflow = "hidden";
     };
 
+    const handleOpenHallEnquiry = () => {
+      setIsHallEnquiryModalOpen(true);
+      document.body.style.overflow = "hidden";
+    };
+
     window.addEventListener("open-booking-modal", handleOpenBooking);
-    return () => window.removeEventListener("open-booking-modal", handleOpenBooking);
+    window.addEventListener("open-hall-enquiry-modal", handleOpenHallEnquiry);
+    
+    return () => {
+      window.removeEventListener("open-booking-modal", handleOpenBooking);
+      window.removeEventListener("open-hall-enquiry-modal", handleOpenHallEnquiry);
+    };
   }, []);
 
   const closeBookingModal = () => {
@@ -66,6 +78,14 @@ export default function Home() {
         isOpen={isBookingModalOpen} 
         onClose={closeBookingModal} 
         defaultRoom={bookingRoomType} 
+      />
+
+      <HallEnquiryModal
+        isOpen={isHallEnquiryModalOpen}
+        onClose={() => {
+          setIsHallEnquiryModalOpen(false);
+          document.body.style.overflow = "auto";
+        }}
       />
     </main>
   );

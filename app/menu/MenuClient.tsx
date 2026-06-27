@@ -14,8 +14,23 @@ import {
   ArrowLeft,
   Send,
   Bell,
+  CheckCircle,
 } from "lucide-react";
-import { menuCategories, menuItems, MenuItem } from "./menuData";
+import { menuCategories } from "./menuData";
+
+type MenuItem = {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  subcategory: string | null;
+  description: string | null;
+  emoji: string;
+  tag: string | null;
+  image: string | null;
+  available: boolean;
+  order: number;
+};
 
 type CartItem = MenuItem & { qty: number };
 type OrderType = "table" | "takeaway" | "delivery";
@@ -33,7 +48,7 @@ function ItemCard({ item, qty, onAdd, onIncrease, onDecrease }: {
   onDecrease: () => void;
 }) {
   return (
-    <div className="menu-card group relative flex flex-col rounded-2xl overflow-hidden border border-[var(--dark-border)] bg-[var(--dark-card)] hover:border-[var(--gold)]/40 transition-all duration-300 hover:shadow-xl hover:shadow-[var(--gold)]/5">
+    <div className={`menu-card group relative flex flex-col rounded-2xl overflow-hidden border border-[var(--dark-border)] bg-[var(--dark-card)] transition-all duration-300 ${item.available ? "hover:border-[var(--gold)]/40 hover:shadow-xl hover:shadow-[var(--gold)]/5" : "opacity-50 grayscale pointer-events-none"}`}>
       {/* Background gradient emoij area */}
       <div className="relative h-32 flex items-center justify-center bg-gradient-to-br from-[var(--dark)] to-[var(--dark-card)] overflow-hidden">
         <span className="text-5xl opacity-80 group-hover:scale-110 transition-transform duration-500">
@@ -68,7 +83,9 @@ function ItemCard({ item, qty, onAdd, onIncrease, onDecrease }: {
             {item.price === 0 ? "Enquire" : formatPrice(item.price)}
           </span>
 
-          {qty === 0 ? (
+          {!item.available ? (
+             <span className="text-xs font-semibold px-2 py-1 bg-[var(--dark-border)] text-[var(--text-muted)] rounded-md">Unavailable</span>
+          ) : qty === 0 ? (
             <button
               onClick={onAdd}
               disabled={item.price === 0}
@@ -114,24 +131,26 @@ function OrderDrawer({
   onIncrease,
   onDecrease,
   onRemove,
+  onClearAll,
 }: {
   cart: CartItem[];
   onClose: () => void;
   onIncrease: (id: string) => void;
   onDecrease: (id: string) => void;
   onRemove: (id: string) => void;
+  onClearAll: () => void;
 }) {
   const [orderType, setOrderType] = useState<OrderType>("table");
   const [name, setName] = useState("");
   const [table, setTable] = useState("");
   const [address, setAddress] = useState("");
   const [message, setMessage] = useState("");
-  const [step, setStep] = useState<"cart" | "checkout">("cart");
+  const [step, setStep] = useState<"cart" | "checkout" | "sent">("cart");
   const [sending, setSending] = useState(false);
 
   const grandTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
 
-  const sendOrder = () => {
+  const sendOrder = async () => {
     if (!name.trim()) return;
     setSending(true);
 
@@ -142,6 +161,58 @@ function OrderDrawer({
         ? "🥡 Takeaway"
         : `🚚 Delivery${address ? ` — ${address}` : ""}`;
 
+    // Helper to map category to Department
+    const getDept = (cat: string) => {
+      if (cat === "food") return "Kitchen";
+      if (cat === "swimming") return "Pool";
+      if (cat === "snooker") return "Snooker";
+      return "Bar"; // drinks, vip, shisha etc
+    };
+
+    // Group cart by department
+    const depts = new Map<string, CartItem[]>();
+    for (const item of cart) {
+      const d = getDept(item.category);
+      if (!depts.has(d)) depts.set(d, []);
+      depts.get(d)!.push(item);
+    }
+
+    const createdRefs: string[] = [];
+
+    // Save to DB
+    try {
+      for (const [dept, items] of Array.from(depts.entries())) {
+        const deptRevenue = items.reduce((s, i) => s + i.price * i.qty, 0);
+        // If costPrice isn't in CartItem, we assume 0 for now (MenuClient doesn't fetch costPrice for public)
+        // Profit will just be revenue. It's okay, admin can edit inventory costs.
+        
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customerName: name.trim(),
+            type: orderType,
+            department: dept,
+            location: orderType === "table" ? table : orderType === "delivery" ? address : null,
+            message: message.trim(),
+            items: items.map(i => ({ id: i.id, name: i.name, qty: i.qty, unitPrice: i.price, unitCost: 0, category: i.category })),
+            totalRevenue: deptRevenue,
+            totalCost: 0,
+            profit: deptRevenue,
+            payment: "unpaid",
+            source: "website",
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          createdRefs.push(data.ref);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to save order to DB", e);
+    }
+
     const itemLines = cart
       .map((i) => `• ${i.qty}× ${i.name} — ${formatPrice(i.price * i.qty)}`)
       .join("\n");
@@ -149,6 +220,7 @@ function OrderDrawer({
     const msg = [
       "🏨 *ODM GROOVE — NEW ORDER*",
       "━━━━━━━━━━━━━━━━━━━━━",
+      createdRefs.length > 0 ? `🎫 *Refs:* ${createdRefs.join(", ")}` : "",
       `📋 *Order Type:* ${typeLabel}`,
       `👤 *Name:* ${name.trim()}`,
       "",
@@ -166,7 +238,11 @@ function OrderDrawer({
 
     const url = `https://wa.me/2347061514120?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
-    setTimeout(() => setSending(false), 2000);
+    setTimeout(() => {
+      setSending(false);
+      setStep("sent");
+      onClearAll();
+    }, 2000);
   };
 
   return (
@@ -199,18 +275,44 @@ function OrderDrawer({
               {cart.length} item{cart.length !== 1 ? "s" : ""}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--dark-card)] text-[var(--warm-gray)] hover:text-[var(--off-white)] hover:bg-[var(--dark-border)] transition-all"
-            aria-label="Close order panel"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex gap-2">
+            {step === "cart" && cart.length > 0 && (
+              <button
+                onClick={onClearAll}
+                className="text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2.5 py-1.5 rounded-lg transition-colors mr-2 border border-red-400/20"
+              >
+                Clear All
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--dark-card)] text-[var(--warm-gray)] hover:text-[var(--off-white)] hover:bg-[var(--dark-border)] transition-all shrink-0"
+              aria-label="Close order panel"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* ScrollBody */}
         <div className="flex-1 overflow-y-auto">
-          {step === "cart" ? (
+          {step === "sent" ? (
+            <div className="flex flex-col items-center justify-center h-full p-8 text-center min-h-[300px]">
+              <div className="w-16 h-16 bg-emerald-500/15 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                <CheckCircle size={32} className="text-emerald-400" />
+              </div>
+              <h3 className="font-display text-2xl font-bold text-[var(--off-white)] mb-2">Order Sent! ✅</h3>
+              <p className="text-sm text-[var(--warm-gray)] mb-8">
+                WhatsApp has opened. Please <strong className="text-[var(--gold)]">tap Send inside WhatsApp</strong> to submit your order directly to our kitchen.
+              </p>
+              <button
+                onClick={onClose}
+                className="w-full bg-[var(--gold)] text-[var(--black)] hover:bg-[var(--gold-light)] py-3.5 rounded-xl font-bold uppercase tracking-wider transition-colors active:scale-[0.98]"
+              >
+                Done
+              </button>
+            </div>
+          ) : step === "cart" ? (
             // ── Cart Items ──────────────────────────────────────────────────
             <div className="p-4 space-y-3">
               {cart.map((item) => (
@@ -359,7 +461,8 @@ function OrderDrawer({
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer (Hidden when sent) */}
+        {step !== "sent" && (
         <div className="border-t border-[var(--dark-border)] p-5 space-y-4 shrink-0 bg-[var(--dark)]">
           {/* Grand Total */}
           <div className="flex items-center justify-between">
@@ -374,7 +477,12 @@ function OrderDrawer({
           {step === "cart" ? (
             <button
               onClick={() => setStep("checkout")}
-              className="w-full btn-gold flex items-center justify-center gap-2 py-3.5"
+              disabled={cart.length === 0}
+              className={`w-full flex items-center justify-center gap-2 py-3.5 font-bold uppercase tracking-wider rounded-sm transition-all ${
+                cart.length === 0
+                  ? "bg-[var(--dark-border)] text-[var(--warm-gray)] cursor-not-allowed"
+                  : "btn-gold"
+              }`}
             >
               Proceed to Order
               <ChevronRight size={16} />
@@ -406,6 +514,7 @@ function OrderDrawer({
             Your order will be sent to our team on WhatsApp
           </p>
         </div>
+        )}
       </div>
     </div>
   );
@@ -516,6 +625,27 @@ export default function MenuClient() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const categoryBarRef = useRef<HTMLDivElement>(null);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchMenu() {
+      try {
+        const res = await fetch("/api/menu");
+        if (res.ok) {
+          const data = await res.json();
+          // Sort by order
+          const sorted = data.sort((a: MenuItem, b: MenuItem) => (a.order || 0) - (b.order || 0));
+          setMenuItems(sorted);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMenu();
+  }, []);
 
   const cartCount = cart.reduce((s, i) => s + i.qty, 0);
   const grandTotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
@@ -532,7 +662,7 @@ export default function MenuClient() {
     if (!search.trim()) return byCat;
     const q = search.toLowerCase();
     return byCat.filter((i) => i.name.toLowerCase().includes(q));
-  }, [activeCategory, search]);
+  }, [activeCategory, search, menuItems]);
 
   const getQty = (id: string) => cart.find((c) => c.id === id)?.qty ?? 0;
 
@@ -569,6 +699,14 @@ export default function MenuClient() {
     }
     return subs;
   }, [visibleItems]);
+
+  if (loading && menuItems.length === 0) {
+    return (
+      <div className="min-h-screen bg-[var(--black)] flex items-center justify-center">
+         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--gold)]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--black)] flex flex-col">
@@ -770,6 +908,7 @@ export default function MenuClient() {
           onIncrease={increaseItem}
           onDecrease={decreaseItem}
           onRemove={removeItem}
+          onClearAll={() => setCart([])}
         />
       )}
 
