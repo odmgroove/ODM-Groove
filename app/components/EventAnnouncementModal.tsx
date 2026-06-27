@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   X,
   Calendar,
@@ -13,7 +14,31 @@ import {
   ChevronRight,
   Flame,
 } from "lucide-react";
-import { getUpcomingEvents, formatEventDate, type Event } from "../lib/eventsData";
+
+// We define a local parsed event type that matches what we use in the UI
+export type ParsedEvent = {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  description: string;
+  longDescription: string | null;
+  date: string;
+  endTime: string;
+  venue: string;
+  category: string;
+  status: string;
+  featured: boolean;
+  ticketPrices: { label: string; price: number }[];
+  contactNumbers: string[];
+  hashtags: string[];
+  whatsappNumber: string;
+  image: string | null;
+  posterImage: string | null;
+  accentColor: string;
+  artists: string[] | null;
+  ageLimit: number | null;
+  extras: string[] | null;
+};
 
 const DISMISS_KEY = "odm_event_modal_dismissed_v2";
 const DISMISS_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
@@ -35,24 +60,28 @@ function setDismissed() {
   } catch {}
 }
 
-function isEventActive(event: Event): boolean {
-  // Hide event 2 hours after it starts (enough buffer)
-  const startMs = new Date(event.date).getTime();
-  return Date.now() < startMs + 2 * 60 * 60 * 1000;
+function formatEventDate(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-NG", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 }
 
 function EventSlide({
   event,
   onClose,
 }: {
-  event: Event;
+  event: ParsedEvent;
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
 
   const shareUrl = `https://odmgroove.vercel.app/events/${event.id}`;
   const shareText =
-    `🎉 ${event.title} — ${event.subtitle}!\n\n` +
+    `🎉 ${event.title} — ${event.subtitle || ""}\n\n` +
     `📅 ${formatEventDate(event.date)}\n` +
     `⏰ 5PM ${event.endTime}\n` +
     `📍 ${event.venue}\n` +
@@ -64,7 +93,7 @@ function EventSlide({
   const handleShare = async () => {
     if (navigator.share) {
       try {
-        await navigator.share({ title: `${event.title} — ${event.subtitle}`, text: shareText, url: shareUrl });
+        await navigator.share({ title: `${event.title}`, text: shareText, url: shareUrl });
       } catch {}
     } else {
       try { await navigator.clipboard.writeText(shareText); } catch {}
@@ -74,126 +103,127 @@ function EventSlide({
   };
 
   const whatsappShare = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+  const displayImage = event.posterImage || event.image;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 w-full">
-      {/* Accent bar */}
-      <div className="h-1 w-full flex-shrink-0" style={{ background: `linear-gradient(90deg, transparent, ${event.accentColor}, transparent)` }} />
-
-      {/* Glow bg */}
-      <div
-        className="absolute inset-0 opacity-[0.07] pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse at top center, ${event.accentColor} 0%, transparent 65%)`,
-        }}
-      />
-
-      <div className="relative z-10 p-6 sm:p-8 flex flex-col gap-5 flex-1 overflow-y-auto">
-        {/* Tags */}
-        <div className="flex flex-wrap gap-2">
-          <span
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border animate-pulse"
-            style={{ color: event.accentColor, borderColor: `${event.accentColor}50`, background: `${event.accentColor}15` }}
-          >
-            <Flame size={10} /> Upcoming Event
-          </span>
-          {event.ageLimit && (
-            <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[var(--warm-gray)] text-xs font-medium">
-              {event.ageLimit}+ Only
+    <div className="flex flex-col md:flex-row flex-1 min-h-0 w-full relative bg-[var(--dark-card)]">
+      {/* Visual Side (Image) */}
+      {displayImage && (
+        <div className="md:w-1/2 relative h-48 md:h-auto flex-shrink-0 border-b md:border-b-0 md:border-r border-[var(--dark-border)]">
+          <Image
+            src={displayImage}
+            alt={event.title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--dark-card)] md:bg-gradient-to-r md:from-transparent via-transparent to-transparent md:to-[var(--dark-card)]" />
+          
+          <div className="absolute top-4 left-4 z-10 flex flex-wrap gap-2">
+            <span
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md shadow-lg"
+              style={{ color: "#fff", background: event.accentColor }}
+            >
+              <Flame size={12} /> Upcoming
             </span>
-          )}
-        </div>
-
-        {/* Title block */}
-        <div>
-          {event.artists && (
-            <p className="text-[var(--warm-gray)] text-xs tracking-[0.3em] uppercase font-medium mb-2">
-              {event.artists.join(" × ")} presents
-            </p>
-          )}
-          <h2
-            className="font-display text-3xl sm:text-4xl font-bold text-[var(--off-white)] leading-tight mb-1"
-            style={{ fontFamily: "Playfair Display, serif" }}
-          >
-            {event.title}
-          </h2>
-          <h3
-            className="font-display text-xl sm:text-2xl font-bold italic"
-            style={{ fontFamily: "Playfair Display, serif", color: event.accentColor }}
-          >
-            {event.subtitle}
-          </h3>
-        </div>
-
-        {/* Details */}
-        <div className="space-y-2.5 text-sm">
-          <div className="flex items-center gap-3 text-[var(--off-white)]/80">
-            <Calendar size={15} className="text-[var(--gold)] flex-shrink-0" />
-            <span>{formatEventDate(event.date)}</span>
-          </div>
-          <div className="flex items-center gap-3 text-[var(--off-white)]/80">
-            <Clock size={15} className="text-[var(--gold)] flex-shrink-0" />
-            <span>5PM {event.endTime}</span>
-          </div>
-          <div className="flex items-start gap-3 text-[var(--off-white)]/80">
-            <MapPin size={15} className="text-[var(--gold)] flex-shrink-0 mt-0.5" />
-            <span className="leading-relaxed">{event.venue}</span>
           </div>
         </div>
+      )}
 
-        {/* Ticket prices */}
-        <div className="bg-[var(--dark)] border border-[var(--dark-border)] rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Ticket size={13} className="text-[var(--gold)]" />
-            <span className="text-[var(--gold)] text-xs uppercase tracking-[0.2em] font-semibold">Ticket Prices</span>
-          </div>
-          <div className="space-y-0">
-            {event.ticketPrices.map((t) => (
-              <div
-                key={t.label}
-                className="flex justify-between items-center py-2.5 border-b border-[var(--dark-border)] last:border-0"
+      {/* Content Side */}
+      <div className={`flex flex-col flex-1 p-6 sm:p-8 overflow-y-auto ${!displayImage ? 'w-full' : 'md:w-1/2'}`}>
+        {/* Glow bg for content area */}
+        <div
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse at top right, ${event.accentColor} 0%, transparent 70%)`,
+          }}
+        />
+
+        <div className="relative z-10 flex flex-col flex-1 gap-5">
+          {/* Title block */}
+          <div>
+            {event.artists && event.artists.length > 0 && (
+              <p className="text-[var(--warm-gray)] text-xs tracking-[0.3em] uppercase font-medium mb-2">
+                {event.artists.join(" × ")} presents
+              </p>
+            )}
+            <h2
+              className="font-display text-3xl sm:text-4xl font-bold text-[var(--off-white)] leading-tight mb-1"
+              style={{ fontFamily: "Playfair Display, serif" }}
+            >
+              {event.title}
+            </h2>
+            {event.subtitle && (
+              <h3
+                className="font-display text-xl sm:text-2xl font-bold italic"
+                style={{ fontFamily: "Playfair Display, serif", color: event.accentColor }}
               >
-                <span className="text-[var(--off-white)] font-medium text-sm">{t.label}</span>
-                <span
-                  className="font-display text-xl font-bold"
-                  style={{ fontFamily: "Playfair Display, serif", color: event.accentColor }}
-                >
-                  ₦{t.price.toLocaleString()}
-                </span>
+                {event.subtitle}
+              </h3>
+            )}
+          </div>
+
+          {/* Details */}
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center gap-3 text-[var(--off-white)]/80">
+              <Calendar size={16} className="text-[var(--gold)] flex-shrink-0" />
+              <span>{formatEventDate(event.date)}</span>
+            </div>
+            <div className="flex items-center gap-3 text-[var(--off-white)]/80">
+              <Clock size={16} className="text-[var(--gold)] flex-shrink-0" />
+              <span>5PM {event.endTime}</span>
+            </div>
+            <div className="flex items-start gap-3 text-[var(--off-white)]/80">
+              <MapPin size={16} className="text-[var(--gold)] flex-shrink-0 mt-0.5" />
+              <span className="leading-relaxed">{event.venue}</span>
+            </div>
+          </div>
+
+          {/* Ticket prices */}
+          {event.ticketPrices.length > 0 && (
+            <div className="bg-[var(--dark)] border border-[var(--dark-border)] rounded-lg p-4 mt-auto">
+              <div className="flex items-center gap-2 mb-3">
+                <Ticket size={14} className="text-[var(--gold)]" />
+                <span className="text-[var(--gold)] text-xs uppercase tracking-[0.2em] font-semibold">Ticket Prices</span>
               </div>
-            ))}
+              <div className="space-y-0">
+                {event.ticketPrices.map((t) => (
+                  <div
+                    key={t.label}
+                    className="flex justify-between items-center py-2.5 border-b border-[var(--dark-border)] last:border-0"
+                  >
+                    <span className="text-[var(--off-white)] font-medium text-sm">{t.label}</span>
+                    <span
+                      className="font-display text-xl font-bold"
+                      style={{ fontFamily: "Playfair Display, serif", color: event.accentColor }}
+                    >
+                      ₦{t.price.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <Link
+              href={`/events/${event.id}`}
+              onClick={onClose}
+              className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-lg text-sm font-bold uppercase tracking-wider transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] shadow-lg"
+              style={{ background: event.accentColor, color: "#000" }}
+            >
+              <Ticket size={16} /> Reserve Now
+            </Link>
+            <button
+              onClick={handleShare}
+              className="flex items-center justify-center gap-2 py-3 px-5 rounded-lg text-sm font-bold uppercase tracking-wider border border-[var(--dark-border)] text-[var(--off-white)] hover:bg-white/5 transition-colors"
+            >
+              <Share2 size={16} /> {copied ? "Copied!" : "Share"}
+            </button>
           </div>
         </div>
-
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-1">
-          <Link
-            href={`/events/${event.id}`}
-            onClick={onClose}
-            className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-lg text-sm font-bold uppercase tracking-wider transition-all duration-200 hover:brightness-110"
-            style={{ background: event.accentColor, color: "#0a0a0a" }}
-          >
-            <Ticket size={15} /> View Event & Reserve
-          </Link>
-          <a
-            href={whatsappShare}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex items-center justify-center gap-2 py-3 px-5 rounded-lg text-sm font-bold uppercase tracking-wider border border-[var(--gold)]/30 text-[var(--gold)] hover:bg-[var(--gold)]/10 transition-all duration-200"
-          >
-            <Share2 size={15} /> Share on WhatsApp
-          </a>
-        </div>
-
-        {/* Hashtags */}
-        <div className="flex flex-wrap gap-1.5 pt-1">
-          {event.hashtags.map((tag) => (
-            <span key={tag} className="text-[10px] text-[var(--warm-gray)]">{tag}</span>
-          ))}
-        </div>
-        
-        {/* Safe space at the bottom to prevent scroll clipping */}
-        <div className="h-1 flex-shrink-0 pt-2" />
       </div>
     </div>
   );
@@ -201,14 +231,47 @@ function EventSlide({
 
 export default function EventAnnouncementModal() {
   const [isVisible, setIsVisible] = useState(false);
-  const [activeEvents, setActiveEvents] = useState<Event[]>([]);
+  const [activeEvents, setActiveEvents] = useState<ParsedEvent[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch events from API
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        const res = await fetch("/api/events?status=upcoming");
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        
+        // Parse DB strings into arrays/objects
+        const parsed: ParsedEvent[] = data.map((e: any) => ({
+          ...e,
+          ticketPrices: JSON.parse(e.ticketPrices),
+          contactNumbers: e.contactNumbers.split(",").map((s: string) => s.trim()),
+          hashtags: e.hashtags.split(",").map((s: string) => s.trim()),
+          artists: e.artists ? e.artists.split(",").map((s: string) => s.trim()) : null,
+          extras: e.extras ? e.extras.split(",").map((s: string) => s.trim()) : null,
+        }));
+
+        // Filter events that haven't started/ended yet (hide 2 hours after start)
+        const active = parsed.filter(event => {
+          const startMs = new Date(event.date).getTime();
+          return Date.now() < startMs + 2 * 60 * 60 * 1000;
+        });
+
+        setActiveEvents(active);
+        setLoading(false);
+      } catch (err) {
+        console.error(err);
+        setLoading(false);
+      }
+    }
+    fetchEvents();
+  }, []);
 
   useEffect(() => {
-    const upcoming = getUpcomingEvents().filter(isEventActive);
-    if (upcoming.length === 0) return;
-    setActiveEvents(upcoming);
+    if (loading || activeEvents.length === 0) return;
 
     // Delay slightly for page load feel
     const timer = setTimeout(() => {
@@ -219,7 +282,7 @@ export default function EventAnnouncementModal() {
     }, 1200);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [loading, activeEvents.length]);
 
   const close = useCallback(() => {
     setIsVisible(false);
@@ -253,27 +316,30 @@ export default function EventAnnouncementModal() {
       className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6"
       role="dialog"
       aria-modal="true"
-      aria-label="Upcoming event announcement"
+      aria-labelledby="modal-title"
     >
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/80 backdrop-blur-md"
         onClick={close}
-        style={{ animation: "fadeIn 0.3s ease" }}
+        style={{ animation: "fadeIn 0.4s ease" }}
       />
 
       {/* Modal */}
       <div
-        className="relative w-full max-w-lg max-h-[90vh] flex flex-col rounded-xl overflow-hidden border border-[var(--dark-border)] bg-[var(--dark-card)] shadow-2xl"
-        style={{ animation: "slideUp 0.35s cubic-bezier(0.16,1,0.3,1)", boxShadow: `0 0 60px ${event.accentColor}30, 0 25px 60px rgba(0,0,0,0.8)` }}
+        className="relative w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl overflow-hidden border border-[var(--dark-border)] bg-[var(--dark)] shadow-2xl"
+        style={{ 
+          animation: "slideUp 0.4s cubic-bezier(0.16,1,0.3,1)", 
+          boxShadow: `0 0 80px ${event.accentColor}40, 0 25px 60px rgba(0,0,0,0.8)` 
+        }}
       >
-        {/* Close button */}
+        {/* Close button - visually floating */}
         <button
           onClick={close}
-          className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-[var(--dark)] border border-[var(--dark-border)] flex items-center justify-center text-[var(--warm-gray)] hover:text-white hover:border-white/30 transition-all"
+          className="absolute top-4 right-4 z-[50] w-10 h-10 rounded-full bg-black/50 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:bg-black/70 hover:scale-110 transition-all focus:outline-none focus:ring-2 focus:ring-[var(--gold)] shadow-lg"
           aria-label="Close announcement"
         >
-          <X size={15} />
+          <X size={18} />
         </button>
 
         {/* Slide content */}
@@ -284,53 +350,56 @@ export default function EventAnnouncementModal() {
           <EventSlide event={event} onClose={close} />
         </div>
 
-        {/* Slider controls — only shown when multiple events */}
-        {activeEvents.length > 1 && (
-          <div className="flex-shrink-0 flex items-center justify-between px-6 py-3 border-t border-[var(--dark-border)] bg-[var(--dark)]">
-            <button
-              onClick={prev}
-              className="w-8 h-8 rounded-full border border-[var(--dark-border)] flex items-center justify-center text-[var(--warm-gray)] hover:text-[var(--gold)] hover:border-[var(--gold)]/40 transition-all"
-            >
-              <ChevronLeft size={16} />
-            </button>
+        {/* Slider controls & Footer */}
+        <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-t border-[var(--dark-border)] bg-[var(--black)]/80 backdrop-blur-md">
+          {activeEvents.length > 1 ? (
+            <div className="flex items-center gap-6">
+              <button
+                onClick={prev}
+                className="w-8 h-8 rounded-full border border-[var(--dark-border)] flex items-center justify-center text-[var(--warm-gray)] hover:text-[var(--gold)] hover:border-[var(--gold)]/40 transition-all focus:outline-none focus:ring-1 focus:ring-[var(--gold)]"
+                aria-label="Previous event"
+              >
+                <ChevronLeft size={16} />
+              </button>
 
-            {/* Dots */}
-            <div className="flex gap-2">
-              {activeEvents.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goTo(i)}
-                  className="rounded-full transition-all duration-300"
-                  style={{
-                    width: i === currentIndex ? 20 : 8,
-                    height: 8,
-                    background: i === currentIndex ? activeEvents[i].accentColor : "var(--dark-border)",
-                  }}
-                  aria-label={`Event ${i + 1}`}
-                />
-              ))}
+              {/* Dots */}
+              <div className="flex gap-2">
+                {activeEvents.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goTo(i)}
+                    className="rounded-full transition-all duration-300 focus:outline-none"
+                    style={{
+                      width: i === currentIndex ? 24 : 8,
+                      height: 8,
+                      background: i === currentIndex ? activeEvents[i].accentColor : "var(--dark-border)",
+                    }}
+                    aria-label={`Go to event ${i + 1}`}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={next}
+                className="w-8 h-8 rounded-full border border-[var(--dark-border)] flex items-center justify-center text-[var(--warm-gray)] hover:text-[var(--gold)] hover:border-[var(--gold)]/40 transition-all focus:outline-none focus:ring-1 focus:ring-[var(--gold)]"
+                aria-label="Next event"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
+          ) : (
+            <div /> // Spacer
+          )}
 
-            <button
-              onClick={next}
-              className="w-8 h-8 rounded-full border border-[var(--dark-border)] flex items-center justify-center text-[var(--warm-gray)] hover:text-[var(--gold)] hover:border-[var(--gold)]/40 transition-all"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        )}
-
-        {/* "Don't show again" text */}
-        <div className="flex-shrink-0 text-center py-2.5 bg-[var(--dark)] border-t border-[var(--dark-border)]">
-          <button onClick={close} className="text-[var(--text-muted)] text-xs hover:text-[var(--warm-gray)] transition-colors">
-            Dismiss · won&apos;t show again for 12 hours
+          <button onClick={close} className="text-[var(--text-muted)] text-xs font-medium hover:text-[var(--warm-gray)] transition-colors focus:outline-none focus:underline">
+            Dismiss · won&apos;t show again for 12h
           </button>
         </div>
       </div>
 
       <style>{`
         @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.97) } to { opacity: 1; transform: translateY(0) scale(1) } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(40px) scale(0.95) } to { opacity: 1; transform: translateY(0) scale(1) } }
       `}</style>
     </div>
   );

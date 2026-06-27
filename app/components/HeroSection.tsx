@@ -118,7 +118,7 @@ export default function HeroSection() {
               Explore Rooms
             </button>
             <button
-              onClick={() => scrollToSection("events")}
+              onClick={() => window.dispatchEvent(new CustomEvent('open-hall-enquiry-modal'))}
               className="btn-ghost w-full sm:w-auto flex items-center justify-center gap-2"
               aria-label="Book our event hall"
             >

@@ -163,7 +163,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
       </head>
-      <body className="antialiased min-h-screen bg-[var(--black)] text-[var(--off-white)] transition-colors duration-300">
+      <body className="antialiased min-h-screen bg-[var(--black)] text-[var(--off-white)] transition-colors duration-300" suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <EventCountdownBanner />
           {children}

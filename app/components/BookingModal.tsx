@@ -16,18 +16,12 @@ import {
   Calendar,
 } from "lucide-react";
 
+import { useEffect } from "react";
+import CustomSelect from "./CustomSelect";
+import DatePicker from "./DatePicker";
+
 // ─── Room options ─────────────────────────────────────────────────────────────
-const ROOMS = [
-  { value: "cedar",    label: "Cedar Room",    price: 30000 },
-  { value: "rosewood", label: "Rosewood Room", price: 30000 },
-  { value: "marple",   label: "Marple Room",   price: 40000 },
-  { value: "cherry",   label: "Cherry Room",   price: 50000 },
-  { value: "basswood", label: "Basswood Room", price: 50000 },
-  { value: "pine",     label: "Pine Room",     price: 50000 },
-  { value: "oak",      label: "Oak Room",      price: 50000 },
-  { value: "walnut",   label: "Walnut Room",   price: 50000 },
-  { value: "redwood",  label: "Redwood Room",  price: 50000 },
-];
+type RoomOption = { value: string; label: string; price: number };
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -47,157 +41,6 @@ function diffNights(a: Date | null, b: Date | null) {
   return Math.max(0, Math.floor((b.getTime() - a.getTime()) / 86400000));
 }
 
-// ─── Dropdown Date Picker ─────────────────────────────────────────────────────
-function DatePicker({
-  label,
-  selected,
-  minDate,
-  onSelect,
-  placeholder = "Select date…",
-}: {
-  label: string;
-  selected: Date | null;
-  minDate?: Date | null;
-  onSelect: (d: Date) => void;
-  placeholder?: string;
-}) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const base = selected ?? minDate ?? today;
-  const [viewYear,  setViewYear]  = useState(base.getFullYear());
-  const [viewMonth, setViewMonth] = useState(base.getMonth());
-  const [open, setOpen] = useState(false);
-  const wrapRef = useRef<HTMLDivElement>(null);
-
-  // Close when focus leaves the component entirely
-  const handleBlur = useCallback((e: React.FocusEvent) => {
-    if (!wrapRef.current?.contains(e.relatedTarget as Node)) {
-      setOpen(false);
-    }
-  }, []);
-
-  const prevMonth = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
-    else setViewMonth(m => m - 1);
-  };
-  const nextMonth = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
-    else setViewMonth(m => m + 1);
-  };
-
-  // Build grid
-  const firstDay  = new Date(viewYear, viewMonth, 1).getDay();
-  const daysInMon = new Date(viewYear, viewMonth + 1, 0).getDate();
-  const cells: (number | null)[] = [
-    ...Array(firstDay).fill(null),
-    ...Array.from({ length: daysInMon }, (_, i) => i + 1),
-  ];
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  const minD = new Date(minDate ?? today);
-  minD.setHours(0, 0, 0, 0);
-
-  const handlePickDate = (d: Date) => {
-    onSelect(d);
-    setOpen(false);
-  };
-
-  return (
-    <div className="space-y-1.5 relative" ref={wrapRef} onBlur={handleBlur}>
-      <label className="block text-xs font-semibold uppercase tracking-widest text-[var(--warm-gray)]">
-        {label}
-      </label>
-
-      {/* Trigger "input" */}
-      <button
-        type="button"
-        onClick={() => setOpen(o => !o)}
-        className={`w-full flex items-center gap-3 bg-[var(--dark-card)] border rounded-xl px-4 py-3 text-sm text-left transition-all duration-200 focus:outline-none
-          ${open
-            ? "border-[var(--gold)] shadow-lg shadow-[var(--gold)]/10"
-            : "border-[var(--dark-border)] hover:border-[var(--gold)]/40"
-          }`}
-      >
-        <Calendar size={14} className={`shrink-0 transition-colors ${open || selected ? "text-[var(--gold)]" : "text-[var(--warm-gray)]"}`} />
-        <span className={`flex-1 ${selected ? "text-[var(--off-white)] font-medium" : "text-[var(--warm-gray)]"}`}>
-          {selected ? fmtDate(selected) : placeholder}
-        </span>
-        <ChevronRight
-          size={13}
-          className={`text-[var(--warm-gray)] transition-transform duration-200 ${open ? "rotate-90 text-[var(--gold)]" : ""}`}
-        />
-      </button>
-
-      {/* Dropdown calendar */}
-      {open && (
-        <div className="absolute left-0 right-0 z-50 mt-1 bg-[var(--dark)] border border-[var(--gold)]/25 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden">
-          {/* Month nav */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--dark-border)]">
-            <button
-              type="button"
-              onClick={prevMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--dark-border)] transition-colors text-[var(--warm-gray)] hover:text-[var(--off-white)]"
-            >
-              <ChevronLeft size={14} />
-            </button>
-            <span className="text-sm font-semibold text-[var(--off-white)]">
-              {MONTHS[viewMonth]} {viewYear}
-            </span>
-            <button
-              type="button"
-              onClick={nextMonth}
-              className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[var(--dark-border)] transition-colors text-[var(--warm-gray)] hover:text-[var(--off-white)]"
-            >
-              <ChevronRight size={14} />
-            </button>
-          </div>
-
-          {/* Day headers */}
-          <div className="grid grid-cols-7 px-3 pt-3">
-            {DAYS.map(d => (
-              <div key={d} className="text-center text-[10px] font-bold text-[var(--warm-gray)] pb-1 uppercase tracking-wider">
-                {d}
-              </div>
-            ))}
-          </div>
-
-          {/* Date cells */}
-          <div className="grid grid-cols-7 px-3 pb-4 gap-y-1">
-            {cells.map((day, i) => {
-              if (day === null) return <div key={i} />;
-              const d = new Date(viewYear, viewMonth, day);
-              d.setHours(0, 0, 0, 0);
-              const isPast     = d < minD;
-              const isSelected = selected != null && d.toDateString() === selected.toDateString();
-              const isToday    = d.toDateString() === today.toDateString();
-              return (
-                <button
-                  type="button"
-                  key={i}
-                  onClick={() => !isPast && handlePickDate(d)}
-                  disabled={isPast}
-                  className={`flex items-center justify-center text-xs rounded-full transition-all duration-150 font-medium mx-auto
-                    ${isPast
-                      ? "text-[var(--warm-gray)]/25 cursor-not-allowed"
-                      : isSelected
-                      ? "bg-[var(--gold)] text-[var(--black)] font-bold shadow-lg shadow-[var(--gold)]/30"
-                      : isToday
-                      ? "border border-[var(--gold)]/50 text-[var(--gold)] hover:bg-[var(--gold)]/10"
-                      : "text-[var(--off-white)] hover:bg-[var(--dark-border)]"
-                    }`}
-                  style={{ width: 32, height: 32 }}
-                >
-                  {day}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ─── Booking Card (for download) ──────────────────────────────────────────────
 function BookingCard({ name, email, phone, roomLabel, roomPrice, checkIn, checkOut, nights, bookingRef }: {
@@ -312,29 +155,66 @@ type BookingModalProps = {
 
 // ─── Main Modal ───────────────────────────────────────────────────────────────
 export default function BookingModal({ isOpen, onClose, defaultRoom = "cedar" }: BookingModalProps) {
-  const [step, setStep] = useState<"form" | "success">("form");
+  const [step, setStep] = useState<"form" | "pending_wa" | "verify" | "confirmed">("form");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
+  const [verifyCode, setVerifyCode] = useState("");
+  const [codeInput, setCodeInput] = useState("");
+  const [codeError, setCodeError] = useState(false);
+  const [waUrl, setWaUrl] = useState("");
+
+  const [rooms, setRooms] = useState<RoomOption[]>([]);
+  const [isLoadingRooms, setIsLoadingRooms] = useState(true);
 
   // Form values
   const [name,  setName]  = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [room,  setRoom]  = useState(defaultRoom);
+  const [room,  setRoom]  = useState("");
   const [checkIn,  setCheckIn]  = useState<Date | null>(null);
   const [checkOut, setCheckOut] = useState<Date | null>(null);
 
   const cardRef = useRef<HTMLDivElement>(null);
 
   const nights   = diffNights(checkIn, checkOut);
-  const roomObj  = ROOMS.find(r => r.value === room) ?? ROOMS[0];
+  const roomObj  = rooms.find(r => r.value === room) ?? (rooms.length > 0 ? rooms[0] : { label: "Loading...", price: 0, value: "" });
   const totalEst = roomObj.price * nights;
+
+  useEffect(() => {
+    async function loadRooms() {
+      if (!isOpen) return;
+      try {
+        const res = await fetch("/api/rooms");
+        if (res.ok) {
+          const data = await res.json();
+          const opts = data.filter((r: any) => r.available).map((r: any) => ({
+            value: r.id,
+            label: r.name,
+            price: r.price
+          }));
+          setRooms(opts);
+          // Auto-select the room if defaultRoom is passed and valid
+          if (defaultRoom && opts.find((o: any) => o.value === defaultRoom)) {
+            setRoom(defaultRoom);
+          } else if (opts.length > 0) {
+            setRoom(opts[0].value);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load rooms", err);
+      } finally {
+        setIsLoadingRooms(false);
+      }
+    }
+    loadRooms();
+  }, [isOpen, defaultRoom]);
 
   const resetForm = () => {
     setStep("form");
     setName(""); setEmail(""); setPhone("");
-    setRoom(defaultRoom);
+    if (rooms.length > 0) setRoom(rooms[0].value);
     setCheckIn(null); setCheckOut(null);
+    setVerifyCode(""); setCodeInput(""); setCodeError(false); setWaUrl("");
   };
 
   const handleCheckInSelect = useCallback((d: Date) => {
@@ -342,22 +222,31 @@ export default function BookingModal({ isOpen, onClose, defaultRoom = "cedar" }:
     if (checkOut && d >= checkOut) setCheckOut(null);
   }, [checkOut]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Generate a short alphanumeric verification code
+  const genCode = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!checkIn || !checkOut || nights < 1) return;
 
     setIsSubmitting(true);
     const ref = "ODM-" + Date.now().toString(36).toUpperCase();
+    const code = genCode();
     setBookingRef(ref);
+    setVerifyCode(code);
 
     const checkInStr  = fmtDateFull(checkIn);
     const checkOutStr = fmtDateFull(checkOut);
 
-    // ── WhatsApp ─────────────────────────────────────────────────────────────
+    // ── WhatsApp message (code embedded) ─────────────────────────────────────
     const waMsg = [
       "🏨 *ODM GROOVE — NEW ROOM BOOKING*",
       "━━━━━━━━━━━━━━━━━━━━━━",
-      `📋 *Ref:* ${ref}`,
+      `📋 *Booking Ref:* ${ref}`,
+      `🔑 *Verification Code:* ${code}`,
       "",
       "👤 *Guest Details:*",
       `• Name: ${name}`,
@@ -379,11 +268,47 @@ export default function BookingModal({ isOpen, onClose, defaultRoom = "cedar" }:
       "_Sent via ODM Groove website_",
     ].join("\n");
 
+    const url = `https://wa.me/2347061514120?text=${encodeURIComponent(waMsg)}`;
+    setWaUrl(url);
+
+    try {
+      await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: ref,
+          name,
+          email: email || null,
+          phone,
+          eventDate: new Date(checkIn),
+          type: "room",
+          guests: null,
+          status: "pending",
+          notes: `Room: ${roomObj.label} | Nights: ${nights} | Checkout: ${checkOutStr}`,
+        }),
+      });
+    } catch (error) {
+      console.error("Failed to save booking to database", error);
+    }
+
     setTimeout(() => {
       setIsSubmitting(false);
-      setStep("success");
-      window.open(`https://wa.me/2347061514120?text=${encodeURIComponent(waMsg)}`, "_blank");
+      setStep("pending_wa");
     }, 1200);
+  };
+
+  const openWhatsApp = () => {
+    window.open(waUrl, "_blank");
+    setStep("verify");
+  };
+
+  const handleVerify = () => {
+    if (codeInput.trim().toUpperCase() === verifyCode) {
+      setCodeError(false);
+      setStep("confirmed");
+    } else {
+      setCodeError(true);
+    }
   };
 
   const downloadCard = useCallback(async () => {
@@ -580,21 +505,95 @@ export default function BookingModal({ isOpen, onClose, defaultRoom = "cedar" }:
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/85 backdrop-blur-md"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={() => !isSubmitting && step === "form" && onClose()}
       />
 
-      {/* ── SUCCESS ──────────────────────────────────────────────────────────── */}
-      {step === "success" ? (
+      {/* ── STEP: PENDING_WA (one step left) ──────────────────────────────────── */}
+      {step === "pending_wa" ? (
+        <div className="relative w-full max-w-md flex flex-col items-center gap-5 z-10">
+          <div className="w-full bg-[var(--dark)] border border-[var(--dark-border)] rounded-2xl overflow-hidden shadow-2xl">
+            <div className="h-1 w-full bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600" />
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 rounded-full flex items-center justify-center mx-auto mb-5">
+                <Send size={28} className="text-amber-400" />
+              </div>
+              <h3 className="font-display text-2xl font-bold text-[var(--off-white)] mb-2">One Step Left!</h3>
+              <p className="text-sm text-[var(--warm-gray)] mb-1">Your booking is saved. To get your booking card, you need to send the message to our team on WhatsApp.</p>
+              <p className="text-xs text-[var(--gold)] font-semibold mt-3">A verification code is inside the message. You&apos;ll need it on the next screen.</p>
+              <div className="mt-4 mb-6 inline-block bg-[var(--gold)]/10 border border-[var(--gold)]/30 rounded-lg px-4 py-2">
+                <span className="text-[10px] text-[var(--warm-gray)] uppercase tracking-widest">Ref: </span>
+                <span className="text-sm font-bold text-[var(--gold)]">{bookingRef}</span>
+              </div>
+              <button
+                onClick={openWhatsApp}
+                className="w-full flex items-center justify-center gap-3 py-4 bg-green-600 hover:bg-green-500 text-white font-bold text-base rounded-xl transition-all shadow-lg shadow-green-900/30 active:scale-[0.98]"
+              >
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.374 0 0 5.373 0 12c0 2.117.549 4.107 1.508 5.836L.057 23.622a.5.5 0 0 0 .609.61l5.787-1.449A11.944 11.944 0 0 0 12 24c6.626 0 12-5.373 12-12S18.626 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.001-1.368l-.359-.213-3.72.93.99-3.614-.234-.373A9.818 9.818 0 1 1 12 21.818z"/></svg>
+                Open WhatsApp & Send Message →
+              </button>
+              <p className="text-[10px] text-[var(--warm-gray)] mt-4">After sending, come back here and enter the verification code from your WhatsApp message.</p>
+            </div>
+          </div>
+        </div>
+
+      ) : step === "verify" ? (
+        /* ── STEP: VERIFY (enter code) ─────────────────────────────────────── */
+        <div className="relative w-full max-w-md flex flex-col items-center gap-5 z-10">
+          <div className="w-full bg-[var(--dark)] border border-[var(--dark-border)] rounded-2xl overflow-hidden shadow-2xl">
+            <div className="h-1 w-full bg-gradient-to-r from-[var(--gold-dark)] via-[var(--gold)] to-[var(--gold-light)]" />
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-[var(--gold)]/10 border border-[var(--gold)]/30 rounded-full flex items-center justify-center mx-auto mb-5">
+                <Clock size={28} className="text-[var(--gold)]" />
+              </div>
+              <h3 className="font-display text-2xl font-bold text-[var(--off-white)] mb-2">Enter Your Code</h3>
+              <p className="text-sm text-[var(--warm-gray)] mb-6">
+                Open your WhatsApp message and find the <span className="text-[var(--gold)] font-semibold">Verification Code</span>. Enter it below to unlock your booking card.
+              </p>
+
+              <div className="mb-4">
+                <input
+                  type="text"
+                  value={codeInput}
+                  onChange={(e) => { setCodeInput(e.target.value.toUpperCase()); setCodeError(false); }}
+                  onKeyDown={(e) => e.key === "Enter" && handleVerify()}
+                  maxLength={6}
+                  placeholder="e.g. A3F9K2"
+                  className={`w-full text-center text-2xl font-mono font-bold tracking-[0.4em] bg-[var(--dark-card)] border rounded-xl px-4 py-4 text-[var(--off-white)] outline-none transition-all ${
+                    codeError ? "border-red-500 text-red-400" : "border-[var(--dark-border)] focus:border-[var(--gold)]"
+                  }`}
+                />
+                {codeError && (
+                  <p className="text-xs text-red-400 mt-2">❌ That code doesn&apos;t match. Please check your WhatsApp message and try again.</p>
+                )}
+              </div>
+
+              <button
+                onClick={handleVerify}
+                disabled={codeInput.length < 4}
+                className="w-full py-3.5 bg-[var(--gold)] hover:bg-[var(--gold-light)] text-[var(--black)] font-bold rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+              >
+                Unlock Booking Card
+              </button>
+
+              <button onClick={openWhatsApp} className="mt-3 text-xs text-[var(--gold)]/70 hover:text-[var(--gold)] transition-colors underline underline-offset-2">
+                Didn&apos;t send yet? Re-open WhatsApp →
+              </button>
+            </div>
+          </div>
+        </div>
+
+      ) : step === "confirmed" ? (
+        /* ── STEP: CONFIRMED (show card) ──────────────────────────────────────── */
         <div className="relative w-full max-w-xl flex flex-col items-center gap-6 z-10 max-h-[92vh] overflow-y-auto py-4">
           {/* Banner */}
           <div className="w-full bg-[var(--dark)] border border-[var(--dark-border)] rounded-2xl p-6 text-center">
             <div className="w-16 h-16 bg-emerald-500/15 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={32} className="text-emerald-400" />
             </div>
-            <h3 className="font-display text-2xl font-bold text-[var(--off-white)] mb-2">Booking Submitted!</h3>
+            <h3 className="font-display text-2xl font-bold text-[var(--off-white)] mb-2">Booking Confirmed! 🎉</h3>
             <p className="text-sm text-[var(--warm-gray)]">
-              Your request has been sent via WhatsApp and email. Our team will contact you to confirm.
+              Your booking card is ready. Download it and save it as proof of your reservation.
             </p>
             <div className="mt-3 inline-block bg-[var(--gold)]/10 border border-[var(--gold)]/30 rounded-lg px-4 py-2">
               <span className="text-[10px] text-[var(--warm-gray)] uppercase tracking-widest">Ref: </span>
@@ -633,7 +632,8 @@ export default function BookingModal({ isOpen, onClose, defaultRoom = "cedar" }:
         </div>
       ) : (
         /* ── FORM ──────────────────────────────────────────────────────────── */
-        <div className="relative w-full max-w-lg bg-[var(--black)] border border-[var(--dark-border)] rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[92vh] flex flex-col">
+
+        <div className="relative w-full max-w-lg bg-[var(--dark)]/85 backdrop-blur-2xl border border-[var(--dark-border)] rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[92vh] flex flex-col">
           {/* Gold top bar */}
           <div className="h-1 w-full shrink-0" style={{ background: "linear-gradient(90deg, #a08030, #c8a84b, #e2c97e, #c8a84b, #a08030)" }} />
 
@@ -698,15 +698,12 @@ export default function BookingModal({ isOpen, onClose, defaultRoom = "cedar" }:
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold uppercase tracking-widest text-[var(--warm-gray)]">Room Type *</label>
               <div className="relative">
-                <BedDouble size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--warm-gray)]" />
-                <select
-                  required value={room} onChange={e => setRoom(e.target.value)}
-                  className="w-full bg-[var(--dark-card)] border border-[var(--dark-border)] rounded-xl pl-10 pr-4 py-3 text-sm text-[var(--off-white)] focus:outline-none focus:border-[var(--gold)] transition-colors appearance-none"
-                >
-                  {ROOMS.map(r => (
-                    <option key={r.value} value={r.value}>{r.label} — {fmtPrice(r.price)}/night</option>
-                  ))}
-                </select>
+                <CustomSelect
+                  value={room}
+                  onChange={setRoom}
+                  options={rooms.map(r => ({ value: r.value, label: `${r.label} — ${fmtPrice(r.price)}/night` }))}
+                  icon={<BedDouble size={14} />}
+                />
               </div>
             </div>
 
@@ -724,6 +721,7 @@ export default function BookingModal({ isOpen, onClose, defaultRoom = "cedar" }:
                 minDate={checkIn ? new Date(checkIn.getTime() + 86400000) : null}
                 onSelect={setCheckOut}
                 placeholder="Pick check-out date"
+                align="right"
               />
             </div>
 

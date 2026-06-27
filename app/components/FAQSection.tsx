@@ -1,37 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 
-const faqs = [
-  {
-    q: "Where is ODM Groove Hotel located?",
-    a: "We are located at Shonekan Street, Ola-Oparun, After Aboki Ifa Villa in Ijoko Ogbayo, Ogun State. We are highly accessible and situated just a short drive from Lagos.",
-  },
-  {
-    q: "What are your check-in and check-out times?",
-    a: "Standard check-in time is from 2:00 PM, and check-out is at 12:00 PM (Noon). Early check-in or late check-out can be arranged subject to availability.",
-  },
-  {
-    q: "What is included in the room price?",
-    a: "Both our Standard (₦30,000) and Deluxe (₦50,000) rooms include free daily breakfast, high-speed WiFi, air conditioning, and a smart TV with Netflix & DSTV. Deluxe rooms also include free access to the swimming pool.",
-  },
-  {
-    q: "What is the capacity of the Event Hall?",
-    a: "Our versatile Event Hall can comfortably accommodate upwards of 200 guests, making it perfect for weddings, corporate seminars, birthday parties, and other grand celebrations.",
-  },
-  {
-    q: "Do you offer parking and security?",
-    a: "Yes, we provide ample free on-site parking for all our guests. The premises are heavily secured with 24/7 security personnel and surveillance systems.",
-  },
-  {
-    q: "How can I book a room or the event hall?",
-    a: "You can book directly by clicking any of the 'Book Now' buttons on this website, which will connect you to our reservations team via WhatsApp or Phone.",
-  },
-];
+type FAQ = {
+  id: string;
+  question: string;
+  answer: string;
+  order: number;
+};
 
 export default function FAQSection() {
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchFaqs() {
+      try {
+        const res = await fetch("/api/faqs");
+        if (res.ok) {
+          const data = await res.json();
+          setFaqs(data);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchFaqs();
+  }, []);
 
   const toggleFaq = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
@@ -43,13 +42,15 @@ export default function FAQSection() {
     "@type": "FAQPage",
     mainEntity: faqs.map((faq) => ({
       "@type": "Question",
-      name: faq.q,
+      name: faq.question,
       acceptedAnswer: {
         "@type": "Answer",
-        text: faq.a,
+        text: faq.answer,
       },
     })),
   };
+
+  if (loading && faqs.length === 0) return null;
 
   return (
     <section className="relative section-padding bg-[var(--black)]">
@@ -80,7 +81,7 @@ export default function FAQSection() {
             const isOpen = openIndex === index;
             return (
               <div
-                key={index}
+                key={faq.id}
                 className={`glass-card rounded-sm overflow-hidden transition-colors ${
                   isOpen ? "border-[var(--gold)]/40" : "border-[var(--dark-border)]"
                 }`}
@@ -91,7 +92,7 @@ export default function FAQSection() {
                   aria-expanded={isOpen}
                 >
                   <span className={`font-medium ${isOpen ? "text-[var(--gold)]" : "text-[var(--off-white)]"}`}>
-                    {faq.q}
+                    {faq.question}
                   </span>
                   <ChevronDown
                     size={20}
@@ -107,7 +108,7 @@ export default function FAQSection() {
                   }`}
                 >
                   <div className="px-6 pb-6 pt-0 text-[var(--warm-gray)] text-sm leading-relaxed border-t border-[var(--dark-border)]/50 mt-2">
-                    {faq.a}
+                    {faq.answer}
                   </div>
                 </div>
               </div>

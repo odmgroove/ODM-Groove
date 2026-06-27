@@ -1,84 +1,45 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import {
-  Wifi, Coffee, Tv, Waves, Star, Check, ArrowRight, BedDouble, ChevronLeft, ChevronRight,
+  Wifi, Coffee, Tv, Waves, Check, ArrowRight, BedDouble, ChevronLeft, ChevronRight,
 } from "lucide-react";
 
-const roomImages30k = [
-  { src: "/Room/odm-groove-hotel-room-30k-1.jpg", alt: "ODM Groove standard hotel room 30k interior" },
-  { src: "/Room/odm-groove-hotel-room-30k-2.jpg", alt: "ODM Groove 30k room bedroom view" },
-  { src: "/Room/odm-groove-hotel-room-30k-toilet-1.jpg", alt: "ODM Groove 30k hotel room toilet" },
-  { src: "/Room/odm-groove-hotel-room-30k-toilet-2.jpg", alt: "ODM Groove 30k hotel room toilet" },
-];
+type Room = {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  features: string;   // comma-separated (new) or JSON array (old)
+  image: string | null;
+  capacity: number;
+  available: boolean;
+};
 
-const roomImages40k = [
-  { src: "/Room/odm-groove-hotel-room-40k-1.jpg", alt: "ODM Groove deluxe hotel room 40k interior" },
-  { src: "/Room/odm-groove-hotel-room-40k-2.jpg", alt: "ODM Groove 40k room bedroom view" },
-  { src: "/Room/odm-groove-hotel-room-40k-toilet-1.jpg", alt: "ODM Groove 40k hotel room toilet" },
-  { src: "/Room/odm-groove-hotel-room-40k-toilet-2.jpg", alt: "ODM Groove 40k hotel room toilet" },
-];
+// Map amenities from strings to their appropriate icons
+const getIcon = (label: string) => {
+  if (label.toLowerCase().includes("wifi") || label.toLowerCase().includes("internet")) return Wifi;
+  if (label.toLowerCase().includes("breakfast") || label.toLowerCase().includes("coffee")) return Coffee;
+  if (label.toLowerCase().includes("tv") || label.toLowerCase().includes("netflix")) return Tv;
+  if (label.toLowerCase().includes("pool")) return Waves;
+  if (label.toLowerCase().includes("bed")) return BedDouble;
+  return Check;
+};
 
-const roomImages50k = [
-  { src: "/Room/odm-groove-hotel-room-50k-1.jpg", alt: "ODM Groove master suite 50k interior" },
-  { src: "/Room/odm-groove-hotel-room-50k-2.jpg", alt: "ODM Groove 50k room bedroom view" },
-  { src: "/Room/odm-groove-hotel-room-50k-3.jpg", alt: "ODM Groove 50k room interior view 3" },
-  { src: "/Room/odm-groove-hotel-room-50k-4.jpg", alt: "ODM Groove 50k room interior view 4" },
-  { src: "/Room/odm-groove-hotel-room-50k-5.jpg", alt: "ODM Groove 50k room interior view 5" },
-  { src: "/Room/odm-groove-hotel-room-50k-toilet-1.jpg", alt: "ODM Groove 50k hotel room toilet" },
-];
+type ProcessedRoom = Room & {
+  slug: string;
+  tagline: string;
+  currency: string;
+  unit: string;
+  parsedImages: { src: string; alt: string }[];
+  parsedFeatures: string[];
+  parsedAmenities: { icon: any; label: string }[];
+  badge: string | null;
+  badgeColor: string;
+};
 
-const baseAmenities = [
-  { icon: Coffee, label: "Free Daily Breakfast" },
-  { icon: Wifi, label: "High-Speed WiFi" },
-  { icon: Tv, label: "Netflix & DSTV" },
-];
-
-const standardAmenities = [...baseAmenities, { icon: BedDouble, label: "Comfortable Bed" }];
-const deluxeAmenities = [...baseAmenities, { icon: Waves, label: "Pool Access Included" }];
-
-const baseFeatures = [
-  "Air Conditioning",
-  "En-suite Bathroom",
-  "24/7 Power Supply",
-  "Premium Toiletries",
-  "Wardrobe & Storage",
-  "Room Service",
-];
-const deluxeFeatures = ["Spacious Layout", "Swimming Pool Access", ...baseFeatures];
-
-const roomData = [
-  { name: "Cedar", price: 30000, type: "standard" },
-  { name: "Rosewood", price: 30000, type: "standard" },
-  { name: "Marple", price: 40000, type: "deluxe" },
-  { name: "Cherry", price: 50000, type: "deluxe" },
-  { name: "Basswood", price: 50000, type: "deluxe" },
-  { name: "Pine", price: 50000, type: "deluxe" },
-  { name: "Oak", price: 50000, type: "deluxe" },
-  { name: "Walnut", price: 50000, type: "deluxe" },
-  { name: "Redwood", price: 50000, type: "deluxe" },
-];
-
-const rooms = roomData.map(room => ({
-  id: room.name.toLowerCase(),
-  slug: `${room.name.toLowerCase()}-room-ijoko-nigeria`,
-  name: `${room.name} Room`,
-  tagline: room.type === "standard" ? "A Home Away from Home" : "The Ultimate Staycation",
-  price: room.price,
-  currency: "₦",
-  unit: "night",
-  images: room.price === 30000 ? roomImages30k : (room.price === 40000 ? roomImages40k : roomImages50k),
-  description: room.type === "standard" 
-    ? "Our Standard Room offers all the comfort you need for a perfect stay — tastefully furnished with a plush bed, air conditioning, and smart TV. Wake up to a complimentary breakfast and enjoy seamless connectivity throughout your visit."
-    : "Experience elevated luxury in our Deluxe Room — all the Standard benefits plus exclusive access to our stunning outdoor swimming pool. More space, premium toiletries, and a truly indulgent ambience perfect for that special staycation.",
-  amenities: room.type === "standard" ? standardAmenities : deluxeAmenities,
-  features: room.type === "standard" ? baseFeatures : deluxeFeatures,
-  badge: room.name === "Cedar" ? "Best Value" : (room.name === "Cherry" ? "Most Popular" : null),
-  badgeColor: room.type === "standard" ? "bg-[var(--gold)]" : "bg-emerald-700",
-}));
-
-function RoomDisplay({ room }: { room: typeof rooms[0] }) {
+function RoomDisplay({ room }: { room: ProcessedRoom }) {
   const [activeImage, setActiveImage] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -89,6 +50,8 @@ function RoomDisplay({ room }: { room: typeof rooms[0] }) {
     return () => clearTimeout(timeout);
   }, [room.id]);
 
+  if (!room.parsedImages || room.parsedImages.length === 0) return null;
+
   return (
     <article
       className={`glass-card rounded-sm overflow-hidden h-full flex flex-col transition-opacity duration-300 ${isAnimating ? "opacity-0" : "opacity-100"}`}
@@ -97,10 +60,10 @@ function RoomDisplay({ room }: { room: typeof rooms[0] }) {
       itemType="https://schema.org/HotelRoom"
     >
       {/* Image gallery */}
-      <div className="relative aspect-[4/3] md:aspect-auto md:h-[400px] lg:h-[450px] w-full shrink-0 group overflow-hidden">
+      <div className="relative aspect-[4/3] md:aspect-auto md:h-[400px] lg:h-[450px] w-full shrink-0 group overflow-hidden bg-black/50">
         <Image
-          src={room.images[activeImage].src}
-          alt={room.images[activeImage].alt}
+          src={room.parsedImages[activeImage].src}
+          alt={room.parsedImages[activeImage].alt || room.name}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           sizes="(max-width: 1024px) 100vw, 66vw"
@@ -110,25 +73,27 @@ function RoomDisplay({ room }: { room: typeof rooms[0] }) {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
         {/* Thumbnail strip */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 w-max max-w-[90%] overflow-x-auto scrollbar-hide">
-          {room.images.map((img, i) => (
-            <button
-              key={i}
-              onClick={() => setActiveImage(i)}
-              className={`relative w-14 h-10 md:w-16 md:h-12 rounded-sm overflow-hidden border-2 transition-all shrink-0 ${
-                i === activeImage ? "border-[var(--gold)] scale-110 shadow-lg" : "border-white/40 hover:border-white/80"
-              }`}
-              aria-label={`View image ${i + 1} of ${room.name}`}
-            >
-              <Image
-                src={img.src}
-                alt={img.alt}
-                fill
-                className="object-cover"
-              />
-            </button>
-          ))}
-        </div>
+        {room.parsedImages.length > 1 && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 w-max max-w-[90%] overflow-x-auto scrollbar-hide">
+            {room.parsedImages.map((img, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveImage(i)}
+                className={`relative w-14 h-10 md:w-16 md:h-12 rounded-sm overflow-hidden border-2 transition-all shrink-0 ${
+                  i === activeImage ? "border-[var(--gold)] scale-110 shadow-lg" : "border-white/40 hover:border-white/80"
+                }`}
+                aria-label={`View image ${i + 1} of ${room.name}`}
+              >
+                <Image
+                  src={img.src}
+                  alt={img.alt || room.name}
+                  fill
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Card content */}
@@ -160,31 +125,35 @@ function RoomDisplay({ room }: { room: typeof rooms[0] }) {
         </p>
 
         {/* Key amenities */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-          {room.amenities.map(({ icon: Icon, label }) => (
-            <div key={label} className="flex items-center gap-2.5 text-[var(--off-white)]/80 bg-[var(--black)] p-3 rounded-sm border border-[var(--dark-border)]/50">
-              <Icon size={16} className="text-[var(--gold)] shrink-0" />
-              <span className="text-xs font-medium leading-tight">{label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Features */}
-        <div className="border-t border-[var(--dark-border)] pt-6 mb-8 mt-auto">
-          <p className="text-[var(--warm-gray)] text-[10px] font-bold uppercase tracking-[0.15em] mb-4">Room Features</p>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-4">
-            {room.features.map((f) => (
-              <div key={f} className="flex items-center gap-2 text-xs text-[var(--off-white)]/70">
-                <Check size={12} className="text-[var(--gold)] shrink-0" />
-                <span>{f}</span>
+        {room.parsedAmenities.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            {room.parsedAmenities.map(({ icon: Icon, label }, idx) => (
+              <div key={idx} className="flex items-center gap-2.5 text-[var(--off-white)]/80 bg-[var(--black)] p-3 rounded-sm border border-[var(--dark-border)]/50">
+                <Icon size={16} className="text-[var(--gold)] shrink-0" />
+                <span className="text-xs font-medium leading-tight">{label}</span>
               </div>
             ))}
           </div>
-        </div>
+        )}
+
+        {/* Features */}
+        {room.parsedFeatures.length > 0 && (
+          <div className="border-t border-[var(--dark-border)] pt-6 mb-8 mt-auto">
+            <p className="text-[var(--warm-gray)] text-[10px] font-bold uppercase tracking-[0.15em] mb-4">Room Features</p>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-4">
+              {room.parsedFeatures.map((f, idx) => (
+                <div key={idx} className="flex items-center gap-2 text-xs text-[var(--off-white)]/70">
+                  <Check size={12} className="text-[var(--gold)] shrink-0" />
+                  <span>{f}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <button
           onClick={() => (window as any).dispatchEvent(new CustomEvent('open-booking-modal', { detail: room.id }))}
-          className="btn-gold w-full py-4 flex items-center justify-center gap-2 text-center text-sm tracking-[0.15em] uppercase font-bold"
+          className="btn-gold w-full py-4 flex items-center justify-center gap-2 text-center text-sm tracking-[0.15em] uppercase font-bold mt-auto"
           aria-label={`Book ${room.name} at ODM Groove Hotel`}
         >
           Book {room.name} Now
@@ -196,7 +165,79 @@ function RoomDisplay({ room }: { room: typeof rooms[0] }) {
 }
 
 export default function RoomsSection() {
-  const [activeRoom, setActiveRoom] = useState(rooms[0]);
+  const [rooms, setRooms] = useState<ProcessedRoom[]>([]);
+  const [activeRoom, setActiveRoom] = useState<ProcessedRoom | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRooms() {
+      try {
+        const res = await fetch("/api/rooms");
+        if (res.ok) {
+          const data: Room[] = await res.json();
+          const activeRooms = data.filter(r => r.available);
+          
+          const processed: ProcessedRoom[] = activeRooms.map(room => {
+            // Support both old JSON-array format and new comma-separated format
+            const parsedFeatures: string[] = (() => {
+              if (!room.features) return [];
+              try {
+                const parsed = JSON.parse(room.features);
+                if (Array.isArray(parsed)) return parsed.map((f: any) => String(f).trim());
+              } catch {}
+              return room.features.split(',').map(f => f.trim()).filter(Boolean);
+            })();
+            
+            // Generate amenities dynamically from features since schema doesn't have an amenities field
+            const parsedAmenities = parsedFeatures
+              .filter(f => /wifi|internet|breakfast|coffee|tv|netflix|pool|bed/i.test(f))
+              .map(label => ({
+                icon: getIcon(label),
+                label
+              }));
+            
+            // Schema only has one image string
+            const parsedImages = room.image ? [{ src: room.image, alt: room.name }] : [];
+            
+            return {
+              ...room,
+              slug: `${room.name.toLowerCase().replace(/ /g, '-')}-room-ijoko-nigeria`,
+              tagline: (room.price <= 30000) ? "A Home Away from Home" : "The Ultimate Staycation",
+              currency: "₦",
+              unit: "night",
+              parsedImages,
+              parsedFeatures,
+              parsedAmenities,
+              badge: (room.name.toLowerCase().includes("cedar") || room.name.toLowerCase().includes("rosewood")) 
+                ? "Most Popular" 
+                : room.name.toLowerCase().includes("cherry") 
+                  ? "Best Value" 
+                  : null,
+              badgeColor: (room.price <= 30000) ? "bg-[var(--gold)]" : "bg-emerald-700",
+            };
+          });
+
+          setRooms(processed);
+          if (processed.length > 0) setActiveRoom(processed[0]);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRooms();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="section-padding bg-[var(--black)] flex justify-center items-center min-h-[600px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--gold)]"></div>
+      </section>
+    );
+  }
+
+  if (rooms.length === 0 || !activeRoom) return null;
 
   return (
     <section
@@ -297,9 +338,7 @@ export default function RoomsSection() {
           <div className="w-full grow min-w-0 flex flex-col">
             <RoomDisplay room={activeRoom} />
           </div>
-
         </div>
-
       </div>
     </section>
   );

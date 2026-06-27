@@ -10,39 +10,31 @@ type Message = {
   text: string;
 };
 
+type AiRule = {
+  id: string;
+  question: string | null;
+  keywords: string;
+  response: string;
+  order: number;
+};
+
 const INITIAL_MESSAGE: Message = {
   id: "1",
   sender: "bot",
   text: "Welcome to ODM Groove Hotel! 🌟 I'm your AI concierge. How can I assist you today?",
 };
 
-const SUGGESTIONS = [
-  "How much is a room?",
-  "Where are you located?",
-  "Event hall capacity?",
-  "Do you have a pool?",
-];
-
-// Simple rule-based logic for AI Chat
-function getBotResponse(input: string): string {
+// Evaluate rules dynamically
+function getDynamicResponse(input: string, rules: AiRule[]): string {
   const lower = input.toLowerCase();
-  
-  if (lower.includes("price") || lower.includes("cost") || lower.includes("how much") || lower.includes("room")) {
-    return "Our Standard Room is ₦30,000 per night, and our Deluxe Room (which includes pool access) is ₦50,000 per night. Both include free breakfast, WiFi, DSTV & Netflix.";
+
+  for (const rule of rules) {
+    const keywords = rule.keywords.split(",").map(k => k.trim().toLowerCase()).filter(Boolean);
+    if (keywords.some(kw => lower.includes(kw))) {
+      return rule.response;
+    }
   }
-  if (lower.includes("location") || lower.includes("where") || lower.includes("address")) {
-    return "We are located at Shonekan Street, Ola-Oparun, After Aboki Ifa Villa in Ijoko Ogbayo, Ogun State, just minutes away from Lagos.";
-  }
-  if (lower.includes("event") || lower.includes("hall") || lower.includes("wedding") || lower.includes("capacity")) {
-    return "Our expansive Event Hall can accommodate over 200 guests. It's perfect for weddings, birthdays, and corporate seminars. Please contact our front desk for rates.";
-  }
-  if (lower.includes("pool") || lower.includes("swim") || lower.includes("bar") || lower.includes("club")) {
-    return "Yes! We have an outdoor swimming pool, a rooftop VIP lounge, an outdoor bar, a nightclub, and a sports lounge for snooker and football viewing.";
-  }
-  if (lower.includes("book") || lower.includes("reserve") || lower.includes("contact")) {
-    return "You can book directly via WhatsApp using the buttons on our site, or call our front desk. We offer a 10% discount for stays of 3 nights or more!";
-  }
-  
+
   return "I'm not exactly sure about that. Please feel free to call our front desk or message us on WhatsApp for more detailed assistance!";
 }
 
@@ -52,7 +44,24 @@ export default function AIChatWidget() {
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [rules, setRules] = useState<AiRule[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch AI Knowledge base rules on mount
+  useEffect(() => {
+    async function loadRules() {
+      try {
+        const res = await fetch("/api/ai-knowledge");
+        if (res.ok) setRules(await res.json());
+      } catch (err) {
+        console.error("Failed to load AI knowledge", err);
+      }
+    }
+    loadRules();
+  }, []);
+
+  // Derive suggestions from rules that have a 'question' field
+  const suggestions = rules.filter(r => r.question).map(r => r.question as string);
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -71,7 +80,7 @@ export default function AIChatWidget() {
 
     // Simulate AI thinking time
     setTimeout(() => {
-      const responseText = getBotResponse(text);
+      const responseText = getDynamicResponse(text, rules);
       const botMessage: Message = { id: (Date.now() + 1).toString(), sender: "bot", text: responseText };
       setMessages((prev) => [...prev, botMessage]);
       setIsTyping(false);
@@ -82,9 +91,9 @@ export default function AIChatWidget() {
     <>
       {/* Floating Button */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
-        {/* Tooltip prompt (only visible when closed after a few seconds) */}
+        {/* Tooltip prompt (only visible when closed and hovered) */}
         {!isOpen && (
-          <div 
+          <div
             className={`mb-3 bg-[var(--gold)] text-black px-4 py-2 rounded-t-xl rounded-bl-xl rounded-br-sm shadow-xl transition-all duration-500 transform origin-bottom-right ${
               isHovered ? "scale-100 opacity-100" : "scale-0 opacity-0"
             }`}
@@ -143,11 +152,11 @@ export default function AIChatWidget() {
                   <Image src="/bot.png" alt="Bot Icon" fill className="object-cover p-0.5" />
                 </div>
               )}
-              
-              <div 
+
+              <div
                 className={`max-w-[80%] p-3 rounded-2xl ${
-                  msg.sender === "user" 
-                    ? "bg-[var(--gold)] text-black rounded-br-sm" 
+                  msg.sender === "user"
+                    ? "bg-[var(--gold)] text-black rounded-br-sm"
                     : "bg-[#222] text-[var(--off-white)] rounded-bl-sm border border-white/5"
                 }`}
               >
@@ -161,7 +170,7 @@ export default function AIChatWidget() {
               )}
             </div>
           ))}
-          
+
           {isTyping && (
             <div className="flex justify-start">
               <div className="bg-[#222] rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center border border-white/5">
@@ -174,10 +183,10 @@ export default function AIChatWidget() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Suggestions */}
-        {messages.length === 1 && !isTyping && (
+        {/* Dynamic Suggestions (only shown before first reply) */}
+        {messages.length === 1 && !isTyping && suggestions.length > 0 && (
           <div className="px-4 pb-2 flex flex-wrap gap-2">
-            {SUGGESTIONS.map((sug) => (
+            {suggestions.map((sug) => (
               <button
                 key={sug}
                 onClick={() => handleSend(sug)}
