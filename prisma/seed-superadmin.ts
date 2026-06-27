@@ -25,7 +25,7 @@ async function createAdmin(email: string, name: string, password: string, isSupe
 
 async function main() {
   // Super Admin (hidden from all other staff)
-  await createAdmin("", "Super Admin", "", true);
+  await createAdmin("hatykuxordik@gmail.com", "Super Admin", "", true);
 
   // ODM Groove Admin — enter the password below
   await createAdmin("odmgroove@gmail.com", "ODM Groove Admin", "$Odmgroove2024$", true);
