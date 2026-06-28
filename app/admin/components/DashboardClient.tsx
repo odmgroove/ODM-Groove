@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
   Calendar,
   Coffee,
@@ -179,6 +180,10 @@ function SidebarFooterItem({
 
 // ── Dashboard Client ──────────────────────────────────────────────────────────
 export default function DashboardClient({ user }: { user: AdminUserSession }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
   const perms = user.permissions ? JSON.parse(user.permissions) : [];
 
   const TABS = ALL_TABS.filter(tab => {
@@ -188,7 +193,9 @@ export default function DashboardClient({ user }: { user: AdminUserSession }) {
     return tab.requiredPerm.some(p => perms.includes(p));
   });
 
-  const [activeTab, setActiveTab] = useState(TABS.length > 0 ? TABS[0].id : "settings");
+  const urlTab = searchParams.get("tab");
+  const defaultTab = TABS.length > 0 ? TABS[0].id : "settings";
+  const activeTab = urlTab && TABS.some(t => t.id === urlTab) ? urlTab : defaultTab;
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
   const [tooltip, setTooltip] = useState<TooltipData>(null);
@@ -293,7 +300,9 @@ export default function DashboardClient({ user }: { user: AdminUserSession }) {
               isActive={activeTab === tab.id}
               collapsed={collapsed}
               onClick={() => {
-                setActiveTab(tab.id);
+                const params = new URLSearchParams(searchParams.toString());
+                params.set("tab", tab.id);
+                router.push(pathname + "?" + params.toString());
                 setIsSidebarOpen(false);
               }}
               setTooltip={setTooltip}
