@@ -120,6 +120,7 @@ async function main() {
       price: 30000,
       capacity: 2,
       features: "King-size Bed,Free Breakfast,High-Speed WiFi,Smart TV (Netflix & DSTV),Air Conditioning,24/7 Hot Water,Private Bathroom,Daily Housekeeping",
+      image: "/Room/odm-groove-hotel-room-30k-1.jpg",
     },
     {
       name: "Deluxe Room",
@@ -127,6 +128,7 @@ async function main() {
       price: 50000,
       capacity: 2,
       features: "King-size Bed,Free Breakfast,High-Speed WiFi,Smart TV (Netflix & DSTV),Air Conditioning,24/7 Hot Water,Private Bathroom,Daily Housekeeping,Free Pool Access,Premium Minibar",
+      image: "/Room/odm-groove-hotel-room-50k-1.jpg",
     },
   ];
   for (const room of rooms) {

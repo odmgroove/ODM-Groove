@@ -10,6 +10,25 @@ type Message = {
   text: string;
 };
 
+// Lightweight markdown renderer — handles **bold**, newlines, and emoji bullet lines
+function renderMarkdown(text: string) {
+  return text.split("\n").map((line, lineIdx) => {
+    // Convert **bold** segments within a line
+    const parts = line.split(/(\*\*[^*]+\*\*)/g);
+    const rendered = parts.map((part, i) => {
+      if (part.startsWith("**") && part.endsWith("**")) {
+        return <strong key={i} className="font-semibold text-white">{part.slice(2, -2)}</strong>;
+      }
+      return <span key={i}>{part}</span>;
+    });
+    return (
+      <span key={lineIdx} className="block leading-relaxed">
+        {rendered}
+      </span>
+    );
+  });
+}
+
 type AiRule = {
   id: string;
   question: string | null;
@@ -160,7 +179,13 @@ export default function AIChatWidget() {
                     : "bg-[#222] text-[var(--off-white)] rounded-bl-sm border border-white/5"
                 }`}
               >
-                <p className="leading-relaxed whitespace-pre-wrap">{msg.text}</p>
+                {msg.sender === "bot" ? (
+                  <div className="text-sm leading-relaxed space-y-0.5">
+                    {renderMarkdown(msg.text)}
+                  </div>
+                ) : (
+                  <p className="leading-relaxed text-sm">{msg.text}</p>
+                )}
               </div>
 
               {msg.sender === "user" && (

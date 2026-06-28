@@ -52,6 +52,10 @@ function RoomDisplay({ room }: { room: ProcessedRoom }) {
 
   if (!room.parsedImages || room.parsedImages.length === 0) return null;
 
+  // Clamp index to prevent out-of-bounds crash when switching between rooms
+  // with different gallery sizes (e.g. 50k→30k while viewing photo 5)
+  const safeIndex = Math.min(activeImage, room.parsedImages.length - 1);
+
   return (
     <article
       className={`glass-card rounded-sm overflow-hidden h-full flex flex-col transition-opacity duration-300 ${isAnimating ? "opacity-0" : "opacity-100"}`}
@@ -62,8 +66,8 @@ function RoomDisplay({ room }: { room: ProcessedRoom }) {
       {/* Image gallery */}
       <div className="relative aspect-[4/3] md:aspect-auto md:h-[400px] lg:h-[450px] w-full shrink-0 group overflow-hidden bg-black/50">
         <Image
-          src={room.parsedImages[activeImage].src}
-          alt={room.parsedImages[activeImage].alt || room.name}
+          src={room.parsedImages[safeIndex].src}
+          alt={room.parsedImages[safeIndex].alt || room.name}
           fill
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           sizes="(max-width: 1024px) 100vw, 66vw"
@@ -80,7 +84,7 @@ function RoomDisplay({ room }: { room: ProcessedRoom }) {
                 key={i}
                 onClick={() => setActiveImage(i)}
                 className={`relative w-14 h-10 md:w-16 md:h-12 rounded-sm overflow-hidden border-2 transition-all shrink-0 ${
-                  i === activeImage ? "border-[var(--gold)] scale-110 shadow-lg" : "border-white/40 hover:border-white/80"
+                  i === safeIndex ? "border-[var(--gold)] scale-110 shadow-lg" : "border-white/40 hover:border-white/80"
                 }`}
                 aria-label={`View image ${i + 1} of ${room.name}`}
               >
@@ -196,8 +200,31 @@ export default function RoomsSection() {
                 label
               }));
             
-            // Schema only has one image string
-            const parsedImages = room.image ? [{ src: room.image, alt: room.name }] : [];
+            // Derive full gallery from price tier to use all available room photos
+            const GALLERY_MAP: Record<string, { src: string; alt: string }[]> = {
+              "30k": [
+                { src: "/Room/odm-groove-hotel-room-30k-1.jpg", alt: `${room.name} - Bedroom View` },
+                { src: "/Room/odm-groove-hotel-room-30k-2.jpg", alt: `${room.name} - Room Interior` },
+                { src: "/Room/odm-groove-hotel-room-30k-toilet-1.jpg", alt: `${room.name} - Bathroom` },
+                { src: "/Room/odm-groove-hotel-room-30k-toilet-2.jpg", alt: `${room.name} - Bathroom Detail` },
+              ],
+              "40k": [
+                { src: "/Room/odm-groove-hotel-room-40k-1.jpg", alt: `${room.name} - Bedroom View` },
+                { src: "/Room/odm-groove-hotel-room-40k-2.jpg", alt: `${room.name} - Room Interior` },
+                { src: "/Room/odm-groove-hotel-room-40k-toilet-1.jpg", alt: `${room.name} - Bathroom` },
+                { src: "/Room/odm-groove-hotel-room-40k-toilet-2.jpg", alt: `${room.name} - Bathroom Detail` },
+              ],
+              "50k": [
+                { src: "/Room/odm-groove-hotel-room-50k-1.jpg", alt: `${room.name} - Bedroom View` },
+                { src: "/Room/odm-groove-hotel-room-50k-2.jpg", alt: `${room.name} - Room Interior` },
+                { src: "/Room/odm-groove-hotel-room-50k-3.jpg", alt: `${room.name} - Lounge Area` },
+                { src: "/Room/odm-groove-hotel-room-50k-4.jpg", alt: `${room.name} - Suite Detail` },
+                { src: "/Room/odm-groove-hotel-room-50k-5.jpg", alt: `${room.name} - Premium Furnishings` },
+                { src: "/Room/odm-groove-hotel-room-50k-toilet-1.jpg", alt: `${room.name} - Luxury Bathroom` },
+              ],
+            };
+            const tier = room.price <= 30000 ? "30k" : room.price <= 40000 ? "40k" : "50k";
+            const parsedImages = GALLERY_MAP[tier];
             
             return {
               ...room,
