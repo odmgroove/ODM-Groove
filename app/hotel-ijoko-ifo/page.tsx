@@ -22,9 +22,9 @@ import { FALLBACK_ROOMS } from "../lib/fallbackData";
 export const revalidate = 60;
 
 export const metadata: Metadata = {
-  title: "Hotel & Lodging in Ijoko, Ogba-Ayo & Ifo, Ogun State",
+  title: "Hotel & Lodging in Ijoko & Ifo, Ogun",
   description:
-    "Looking for a clean, affordable hotel or lodge in Ijoko Ogbayo, Ogba-Ayo, Aboki-Ifa, or Ifo, Ogun State? Book Standard & Deluxe rooms from ₦30,000/night at ODM Groove Hotel with free breakfast, WiFi, Netflix, DSTV & swimming pool.",
+    "Book affordable rooms from ₦30,000/night at ODM Groove Hotel in Ijoko Ogbayo, Ogba-Ayo & Ifo, Ogun State. Free breakfast, WiFi, Netflix, DSTV & 24/7 security.",
   keywords: [
     "hotel in Ijoko",
     "hotel in Ogba-Ayo",

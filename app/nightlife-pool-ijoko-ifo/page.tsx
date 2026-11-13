@@ -16,9 +16,9 @@ import Footer from "../components/Footer";
 import { BUSINESS_INFO, SITE_URL } from "../lib/seo";
 
 export const metadata: Metadata = {
-  title: "Swimming Pool, Nightclub & Rooftop Lounge in Ijoko & Ifo, Ogun State",
+  title: "Pool, Nightclub & Lounge in Ijoko, Ifo",
   description:
-    "Looking for a swimming pool, nightclub, rooftop bar, snooker, or fun hangout spot in Ijoko Ogbayo, Ogba-Ayo, Aboki-Ifa & Ifo, Ogun State? Visit ODM Groove for pool parties, VIP bottle service, cocktails & weekend nightlife.",
+    "Enjoy our swimming pool, weekend nightclub, rooftop bar, VIP lounge & snooker in Ijoko Ogbayo, Ogba-Ayo & Ifo, Ogun State. Walk-ins & table bookings welcome.",
   keywords: [
     "swimming pool in Ijoko",
     "nightclub in Ijoko Ifo",

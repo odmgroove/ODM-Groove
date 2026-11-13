@@ -32,11 +32,11 @@ const bingVerification = process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION;
 export const metadata: Metadata = {
   metadataBase: new URL(`${SITE_URL}/`),
   title: {
-    default: "ODM Groove Hotel, Event Hall & Lounge | Ijoko, Ogba-Ayo, Ifo, Ogun State",
+    default: "ODM Groove Hotel & Event Hall | Ijoko, Ifo, Ogun State",
     template: "%s | ODM Groove Hotel",
   },
   description:
-    "ODM Groove Limited — boutique hotel, lodge, swimming pool, nightclub & 200+ guest event hall in Ijoko Ogbayo (Ogba-Ayo), Aboki-Ifa, Ifo, Ogun State near Lagos. Rooms from ₦30,000/night with free breakfast, WiFi, Netflix & DSTV.",
+    "Boutique hotel, swimming pool, nightclub & 200+ guest event hall in Ijoko Ogbayo, Ifo, Ogun State near Lagos. Rooms from ₦30,000/night with free breakfast.",
   keywords: [
     "hotel in Ijoko Ogbayo",
     "hotel in Ogba-Ayo",

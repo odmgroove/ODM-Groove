@@ -17,9 +17,9 @@ import Footer from "../components/Footer";
 import { BUSINESS_INFO, SITE_URL } from "../lib/seo";
 
 export const metadata: Metadata = {
-  title: "Event Hall & Wedding Venue in Ijoko, Ogba-Ayo & Ifo, Ogun State",
+  title: "Event Hall in Ijoko & Ifo, Ogun State",
   description:
-    "Book a spacious 200+ guest event hall in Ijoko Ogbayo, Ogba-Ayo, Aboki-Ifa & Ifo, Ogun State. Ideal for weddings, birthday parties, corporate seminars & receptions with sound system, catering & 24/7 security.",
+    "Book our 200+ capacity event hall in Ijoko Ogbayo, Ogba-Ayo & Ifo, Ogun State for weddings, birthdays & seminars with sound, catering & 24/7 security.",
   keywords: [
     "event hall in Ijoko",
     "event hall in Ifo Ogun State",
