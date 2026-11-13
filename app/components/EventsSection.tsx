@@ -260,39 +260,55 @@ function EventCard({ event }: { event: ParsedEvent }) {
   );
 }
 
-export default function EventsSection() {
-  const [events, setEvents] = useState<ParsedEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+function parseEventsList(data: any[]): { active: ParsedEvent[]; past: ParsedEvent[] } {
+  const parsed: ParsedEvent[] = data.map((e: any) => ({
+    ...e,
+    ticketPrices: (() => {
+      if (Array.isArray(e.ticketPrices)) return e.ticketPrices;
+      try { return JSON.parse(e.ticketPrices); } catch { return []; }
+    })(),
+    contactNumbers: Array.isArray(e.contactNumbers)
+      ? e.contactNumbers
+      : String(e.contactNumbers || "").split(",").map((s: string) => s.trim()).filter(Boolean),
+    hashtags: Array.isArray(e.hashtags)
+      ? e.hashtags
+      : String(e.hashtags || "").split(",").map((s: string) => s.trim()).filter(Boolean),
+    artists: Array.isArray(e.artists)
+      ? e.artists
+      : e.artists ? String(e.artists).split(",").map((s: string) => s.trim()).filter(Boolean) : null,
+    extras: Array.isArray(e.extras)
+      ? e.extras
+      : e.extras ? String(e.extras).split(",").map((s: string) => s.trim()).filter(Boolean) : null,
+  }));
 
-  const [pastEvents, setPastEvents] = useState<ParsedEvent[]>([]);
+  const now = Date.now();
+  const active = parsed.filter((event) => {
+    const startMs = new Date(event.date).getTime();
+    return now < startMs + 2 * 60 * 60 * 1000;
+  });
+
+  const past = parsed
+    .filter((event) => new Date(event.date).getTime() < now)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 3);
+
+  return { active, past };
+}
+
+export default function EventsSection({ initialEvents }: { initialEvents?: any[] }) {
+  const initialParsed = initialEvents ? parseEventsList(initialEvents) : null;
+  const [events, setEvents] = useState<ParsedEvent[]>(initialParsed?.active ?? []);
+  const [loading, setLoading] = useState(!initialEvents);
+  const [pastEvents, setPastEvents] = useState<ParsedEvent[]>(initialParsed?.past ?? []);
 
   useEffect(() => {
+    if (initialEvents) return;
     async function fetchEvents() {
       try {
         const res = await fetch("/api/events?status=all");
         if (!res.ok) throw new Error("Failed to fetch");
         const data = await res.json();
-        
-        const parsed: ParsedEvent[] = data.map((e: any) => ({
-          ...e,
-          ticketPrices: (() => { try { return JSON.parse(e.ticketPrices); } catch { return []; } })(),
-          contactNumbers: e.contactNumbers.split(",").map((s: string) => s.trim()),
-          hashtags: e.hashtags.split(",").map((s: string) => s.trim()),
-          artists: e.artists ? e.artists.split(",").map((s: string) => s.trim()) : null,
-          extras: e.extras ? e.extras.split(",").map((s: string) => s.trim()) : null,
-        }));
-
-        // Active = events that haven't ended yet (hide 2 hours after start)
-        const active = parsed.filter(event => {
-          const startMs = new Date(event.date).getTime();
-          return Date.now() < startMs + 2 * 60 * 60 * 1000;
-        });
-
-        const past = parsed
-          .filter(event => new Date(event.date).getTime() < Date.now())
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-          .slice(0, 3);
-
+        const { active, past } = parseEventsList(data);
         setEvents(active);
         setPastEvents(past);
         setLoading(false);
@@ -302,7 +318,7 @@ export default function EventsSection() {
       }
     }
     fetchEvents();
-  }, []);
+  }, [initialEvents]);
 
   const featuredEvent = events.find(e => e.featured);
   const upcomingEvents = events.filter((e) => e.id !== featuredEvent?.id);
@@ -424,7 +440,7 @@ export default function EventsSection() {
                       <feature.icon size={18} className="text-[var(--gold)]" />
                     </div>
                     <div>
-                      <h4 className="text-[var(--off-white)] font-semibold text-sm mb-1">{feature.label}</h4>
+                      <h3 className="text-[var(--off-white)] font-semibold text-sm mb-1">{feature.label}</h3>
                       <span className="text-[var(--warm-gray)] text-xs">{feature.desc}</span>
                     </div>
                   </div>
@@ -441,6 +457,12 @@ export default function EventsSection() {
                   Inquire Now
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
                 </a>
+                <Link
+                  href="/event-hall-ijoko-ifo"
+                  className="btn-ghost flex items-center justify-center gap-2"
+                >
+                  Event Hall Details
+                </Link>
               </div>
             </div>
 
@@ -450,8 +472,9 @@ export default function EventsSection() {
               <div className="absolute top-0 right-0 w-[80%] h-[80%] rounded-sm overflow-hidden shadow-2xl z-20 border border-[var(--dark-border)]">
                 <Image
                   src="/Hall/odm-groove-event-hall-interior-view-1.jpg"
-                  alt="ODM Groove event hall interior"
+                  alt="ODM Groove 200+ capacity event hall interior in Ijoko Ogbayo, Ogun State"
                   fill
+                  sizes="(max-width: 1024px) 80vw, 40vw"
                   className="object-cover"
                 />
                 <div className="absolute inset-0 bg-black/20" />
@@ -461,8 +484,9 @@ export default function EventsSection() {
               <div className="absolute bottom-0 left-0 w-[60%] h-[50%] rounded-sm overflow-hidden shadow-2xl z-30 border-4 border-[var(--black)]">
                 <Image
                   src="/Hall/odm-groove-event-hall-front-view.jpg"
-                  alt="ODM Groove event hall front view"
+                  alt="ODM Groove event hall front entrance view"
                   fill
+                  sizes="(max-width: 1024px) 60vw, 30vw"
                   className="object-cover"
                 />
               </div>

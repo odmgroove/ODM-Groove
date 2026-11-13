@@ -126,9 +126,10 @@ export default function GallerySection() {
                 <div className="relative hover:scale-105 transition-transform duration-700">
                   <Image
                     src={item.src}
-                    alt={item.title}
+                    alt={`${item.title} — ODM Groove Hotel & Event Hall, Ijoko Ogbayo`}
                     width={500}
                     height={350}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="w-full h-auto object-cover"
                   />
                 </div>
@@ -136,9 +137,10 @@ export default function GallerySection() {
                 <div className="relative group-hover:scale-105 transition-transform duration-700">
                   <Image
                     src={item.thumb || "/placeholder.jpg"}
-                    alt={item.title}
+                    alt={`${item.title} video preview — ODM Groove Hotel, Ijoko Ogbayo`}
                     width={500}
                     height={350}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="w-full h-auto object-cover"
                   />
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">

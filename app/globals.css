@@ -18,8 +18,8 @@
 @theme inline {
   --color-background: var(--black);
   --color-foreground: var(--off-white);
-  --font-sans: "Inter", sans-serif;
-  --font-display: "Playfair Display", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
 }
 
 html {
@@ -30,7 +30,7 @@ html {
 body {
   background: var(--black);
   color: var(--off-white);
-  font-family: "Inter", sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   overflow-x: hidden;
 }
 
@@ -73,7 +73,7 @@ body {
 
 /* ── Typography helpers ── */
 .font-display {
-  font-family: "Playfair Display", serif;
+  font-family: var(--font-playfair), ui-serif, Georgia, serif;
 }
 
 .text-gold {

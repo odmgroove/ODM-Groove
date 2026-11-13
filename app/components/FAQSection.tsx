@@ -10,12 +10,13 @@ type FAQ = {
   order: number;
 };
 
-export default function FAQSection() {
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
+export default function FAQSection({ initialFaqs }: { initialFaqs?: FAQ[] }) {
+  const [faqs, setFaqs] = useState<FAQ[]>(initialFaqs ?? []);
   const [openIndex, setOpenIndex] = useState<number | null>(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialFaqs || initialFaqs.length === 0);
 
   useEffect(() => {
+    if (initialFaqs && initialFaqs.length > 0) return;
     async function fetchFaqs() {
       try {
         const res = await fetch("/api/faqs");
@@ -30,34 +31,43 @@ export default function FAQSection() {
       }
     }
     fetchFaqs();
-  }, []);
+  }, [initialFaqs]);
 
   const toggleFaq = (index: number) => {
     setOpenIndex(openIndex === index ? null : index);
   };
 
-  // Generate FAQ Schema
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => ({
-      "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: faq.answer,
-      },
-    })),
-  };
+  // Generate FAQ Schema only when FAQs exist
+  const faqSchema =
+    faqs.length > 0
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((faq) => ({
+            "@type": "Question",
+            name: faq.question,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: faq.answer,
+            },
+          })),
+        }
+      : null;
 
   if (loading && faqs.length === 0) return null;
+  if (faqs.length === 0) return null;
 
   return (
-    <section className="relative section-padding bg-[var(--black)]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
+    <section
+      className="relative section-padding bg-[var(--black)]"
+      aria-labelledby="faq-heading"
+    >
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
       
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16">
@@ -69,8 +79,8 @@ export default function FAQSection() {
             <div className="h-px w-10 bg-[var(--gold)]/60" />
           </div>
           <h2
+            id="faq-heading"
             className="font-display text-3xl md:text-5xl font-bold text-[var(--off-white)] mb-4"
-            style={{ fontFamily: "Playfair Display, serif" }}
           >
             Frequently Asked <span className="gradient-text italic">Questions</span>
           </h2>

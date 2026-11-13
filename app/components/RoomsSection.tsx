@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   Wifi, Coffee, Tv, Waves, Check, ArrowRight, BedDouble, ChevronLeft, ChevronRight,
 } from "lucide-react";
@@ -72,7 +73,6 @@ function RoomDisplay({ room }: { room: ProcessedRoom }) {
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           sizes="(max-width: 1024px) 100vw, 66vw"
           itemProp="image"
-          priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
 
@@ -92,6 +92,7 @@ function RoomDisplay({ room }: { room: ProcessedRoom }) {
                   src={img.src}
                   alt={img.alt || room.name}
                   fill
+                  sizes="64px"
                   className="object-cover"
                 />
               </button>
@@ -168,82 +169,85 @@ function RoomDisplay({ room }: { room: ProcessedRoom }) {
   );
 }
 
-export default function RoomsSection() {
-  const [rooms, setRooms] = useState<ProcessedRoom[]>([]);
-  const [activeRoom, setActiveRoom] = useState<ProcessedRoom | null>(null);
-  const [loading, setLoading] = useState(true);
+function processRooms(data: Room[]): ProcessedRoom[] {
+  const activeRooms = data.filter((r) => r.available);
+
+  return activeRooms.map((room) => {
+    const parsedFeatures: string[] = (() => {
+      if (!room.features) return [];
+      try {
+        const parsed = JSON.parse(room.features);
+        if (Array.isArray(parsed)) return parsed.map((f: unknown) => String(f).trim());
+      } catch {}
+      return room.features.split(",").map((f) => f.trim()).filter(Boolean);
+    })();
+
+    const parsedAmenities = parsedFeatures
+      .filter((f) => /wifi|internet|breakfast|coffee|tv|netflix|pool|bed/i.test(f))
+      .map((label) => ({
+        icon: getIcon(label),
+        label,
+      }));
+
+    const GALLERY_MAP: Record<string, { src: string; alt: string }[]> = {
+      "30k": [
+        { src: "/Room/odm-groove-hotel-room-30k-1.jpg", alt: `${room.name} - Bedroom View` },
+        { src: "/Room/odm-groove-hotel-room-30k-2.jpg", alt: `${room.name} - Room Interior` },
+        { src: "/Room/odm-groove-hotel-room-30k-toilet-1.jpg", alt: `${room.name} - Bathroom` },
+        { src: "/Room/odm-groove-hotel-room-30k-toilet-2.jpg", alt: `${room.name} - Bathroom Detail` },
+      ],
+      "40k": [
+        { src: "/Room/odm-groove-hotel-room-40k-1.jpg", alt: `${room.name} - Bedroom View` },
+        { src: "/Room/odm-groove-hotel-room-40k-2.jpg", alt: `${room.name} - Room Interior` },
+        { src: "/Room/odm-groove-hotel-room-40k-toilet-1.jpg", alt: `${room.name} - Bathroom` },
+        { src: "/Room/odm-groove-hotel-room-40k-toilet-2.jpg", alt: `${room.name} - Bathroom Detail` },
+      ],
+      "50k": [
+        { src: "/Room/odm-groove-hotel-room-50k-1.jpg", alt: `${room.name} - Bedroom View` },
+        { src: "/Room/odm-groove-hotel-room-50k-2.jpg", alt: `${room.name} - Room Interior` },
+        { src: "/Room/odm-groove-hotel-room-50k-3.jpg", alt: `${room.name} - Lounge Area` },
+        { src: "/Room/odm-groove-hotel-room-50k-4.jpg", alt: `${room.name} - Suite Detail` },
+        { src: "/Room/odm-groove-hotel-room-50k-5.jpg", alt: `${room.name} - Premium Furnishings` },
+        { src: "/Room/odm-groove-hotel-room-50k-toilet-1.jpg", alt: `${room.name} - Luxury Bathroom` },
+      ],
+    };
+    const tier = room.price <= 30000 ? "30k" : room.price <= 40000 ? "40k" : "50k";
+    const parsedImages = GALLERY_MAP[tier];
+
+    return {
+      ...room,
+      slug: `${room.name.toLowerCase().replace(/ /g, "-")}-room-ijoko-nigeria`,
+      tagline: room.price <= 30000 ? "A Home Away from Home" : "The Ultimate Staycation",
+      currency: "₦",
+      unit: "night",
+      parsedImages,
+      parsedFeatures,
+      parsedAmenities,
+      badge:
+        room.name.toLowerCase().includes("cedar") || room.name.toLowerCase().includes("rosewood")
+          ? "Most Popular"
+          : room.name.toLowerCase().includes("cherry")
+            ? "Best Value"
+            : null,
+      badgeColor: room.price <= 30000 ? "bg-[var(--gold)]" : "bg-emerald-700",
+    };
+  });
+}
+
+export default function RoomsSection({ initialRooms }: { initialRooms?: Room[] }) {
+  const initialProcessed = initialRooms && initialRooms.length > 0 ? processRooms(initialRooms) : [];
+  const [rooms, setRooms] = useState<ProcessedRoom[]>(initialProcessed);
+  const [activeRoom, setActiveRoom] = useState<ProcessedRoom | null>(initialProcessed[0] ?? null);
+  const [loading, setLoading] = useState(initialProcessed.length === 0);
 
   useEffect(() => {
+    if (initialProcessed.length > 0) return;
     async function fetchRooms() {
       try {
         const res = await fetch("/api/rooms");
         if (res.ok) {
           const data: Room[] = await res.json();
-          const activeRooms = data.filter(r => r.available);
-          
-          const processed: ProcessedRoom[] = activeRooms.map(room => {
-            // Support both old JSON-array format and new comma-separated format
-            const parsedFeatures: string[] = (() => {
-              if (!room.features) return [];
-              try {
-                const parsed = JSON.parse(room.features);
-                if (Array.isArray(parsed)) return parsed.map((f: any) => String(f).trim());
-              } catch {}
-              return room.features.split(',').map(f => f.trim()).filter(Boolean);
-            })();
-            
-            // Generate amenities dynamically from features since schema doesn't have an amenities field
-            const parsedAmenities = parsedFeatures
-              .filter(f => /wifi|internet|breakfast|coffee|tv|netflix|pool|bed/i.test(f))
-              .map(label => ({
-                icon: getIcon(label),
-                label
-              }));
-            
-            // Derive full gallery from price tier to use all available room photos
-            const GALLERY_MAP: Record<string, { src: string; alt: string }[]> = {
-              "30k": [
-                { src: "/Room/odm-groove-hotel-room-30k-1.jpg", alt: `${room.name} - Bedroom View` },
-                { src: "/Room/odm-groove-hotel-room-30k-2.jpg", alt: `${room.name} - Room Interior` },
-                { src: "/Room/odm-groove-hotel-room-30k-toilet-1.jpg", alt: `${room.name} - Bathroom` },
-                { src: "/Room/odm-groove-hotel-room-30k-toilet-2.jpg", alt: `${room.name} - Bathroom Detail` },
-              ],
-              "40k": [
-                { src: "/Room/odm-groove-hotel-room-40k-1.jpg", alt: `${room.name} - Bedroom View` },
-                { src: "/Room/odm-groove-hotel-room-40k-2.jpg", alt: `${room.name} - Room Interior` },
-                { src: "/Room/odm-groove-hotel-room-40k-toilet-1.jpg", alt: `${room.name} - Bathroom` },
-                { src: "/Room/odm-groove-hotel-room-40k-toilet-2.jpg", alt: `${room.name} - Bathroom Detail` },
-              ],
-              "50k": [
-                { src: "/Room/odm-groove-hotel-room-50k-1.jpg", alt: `${room.name} - Bedroom View` },
-                { src: "/Room/odm-groove-hotel-room-50k-2.jpg", alt: `${room.name} - Room Interior` },
-                { src: "/Room/odm-groove-hotel-room-50k-3.jpg", alt: `${room.name} - Lounge Area` },
-                { src: "/Room/odm-groove-hotel-room-50k-4.jpg", alt: `${room.name} - Suite Detail` },
-                { src: "/Room/odm-groove-hotel-room-50k-5.jpg", alt: `${room.name} - Premium Furnishings` },
-                { src: "/Room/odm-groove-hotel-room-50k-toilet-1.jpg", alt: `${room.name} - Luxury Bathroom` },
-              ],
-            };
-            const tier = room.price <= 30000 ? "30k" : room.price <= 40000 ? "40k" : "50k";
-            const parsedImages = GALLERY_MAP[tier];
-            
-            return {
-              ...room,
-              slug: `${room.name.toLowerCase().replace(/ /g, '-')}-room-ijoko-nigeria`,
-              tagline: (room.price <= 30000) ? "A Home Away from Home" : "The Ultimate Staycation",
-              currency: "₦",
-              unit: "night",
-              parsedImages,
-              parsedFeatures,
-              parsedAmenities,
-              badge: (room.name.toLowerCase().includes("cedar") || room.name.toLowerCase().includes("rosewood")) 
-                ? "Most Popular" 
-                : room.name.toLowerCase().includes("cherry") 
-                  ? "Best Value" 
-                  : null,
-              badgeColor: (room.price <= 30000) ? "bg-[var(--gold)]" : "bg-emerald-700",
-            };
-          });
-
+          const processed = processRooms(data);
           setRooms(processed);
           if (processed.length > 0) setActiveRoom(processed[0]);
         }
@@ -254,7 +258,7 @@ export default function RoomsSection() {
       }
     }
     fetchRooms();
-  }, []);
+  }, [initialProcessed.length]);
 
   if (loading) {
     return (
@@ -296,9 +300,16 @@ export default function RoomsSection() {
           >
             The <span className="gradient-text italic">Master Suite</span> Collection
           </h2>
-          <p className="text-[var(--warm-gray)] max-w-2xl mx-auto text-base leading-relaxed">
+          <p className="text-[var(--warm-gray)] max-w-2xl mx-auto text-base leading-relaxed mb-4">
             Select an accommodation from our interactive showcase. Every room includes complimentary breakfast, high-speed WiFi, and premium entertainment.
           </p>
+          <Link
+            href="/hotel-ijoko-ifo"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[var(--gold)] hover:text-[var(--gold-light)] transition-colors"
+          >
+            View All Rooms &amp; Lodging Rates in Ijoko &amp; Ifo
+            <ArrowRight size={13} />
+          </Link>
         </div>
 
         {/* Master Detail Interface */}

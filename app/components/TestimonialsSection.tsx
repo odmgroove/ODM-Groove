@@ -286,12 +286,19 @@ function AddReviewModal({ onClose }: { onClose: () => void }) {
 }
 
 // ─── Main Section ─────────────────────────────────────────────────────────────
-export default function TestimonialsSection() {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+export default function TestimonialsSection({
+  initialTestimonials,
+}: {
+  initialTestimonials?: Testimonial[];
+}) {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(
+    initialTestimonials ? initialTestimonials.filter((t) => t.visible) : []
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
+    if (initialTestimonials && initialTestimonials.length > 0) return;
     async function fetchTestimonials() {
       try {
         const res = await fetch("/api/testimonials");
@@ -305,7 +312,7 @@ export default function TestimonialsSection() {
       }
     }
     fetchTestimonials();
-  }, []);
+  }, [initialTestimonials]);
 
   useEffect(() => {
     if (testimonials.length <= 1) return;
@@ -316,20 +323,30 @@ export default function TestimonialsSection() {
   }, [testimonials.length]);
 
   return (
-    <section className="relative section-padding bg-[var(--dark)] overflow-hidden">
+    <section
+      className="relative section-padding bg-[var(--dark)] overflow-hidden"
+      aria-labelledby="testimonials-heading"
+    >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-96 bg-[var(--gold)]/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-5xl mx-auto text-center relative z-10 px-4">
         
         {/* Header */}
         <div className="flex flex-col items-center justify-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="flex items-center justify-center gap-3 mb-4">
             <div className="h-px w-10 bg-[var(--gold)]/60" />
             <span className="text-[var(--gold)] text-xs tracking-[0.3em] uppercase font-medium">
               Guest Experiences
             </span>
             <div className="h-px w-10 bg-[var(--gold)]/60" />
           </div>
+
+          <h2
+            id="testimonials-heading"
+            className="font-display text-3xl md:text-4xl lg:text-5xl font-bold text-[var(--off-white)] mb-6"
+          >
+            What Our <span className="gradient-text italic">Guests Say</span>
+          </h2>
 
           {/* Add Review Button */}
           <button
@@ -375,7 +392,7 @@ export default function TestimonialsSection() {
                     <div className="flex gap-3 mb-8 justify-center">
                       {images.map((img, i) => (
                         <div key={i} className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden border border-[var(--dark-border)] group">
-                           <Image src={img} alt={`Review by ${review.name}`} fill className="object-cover group-hover:scale-110 transition-transform" />
+                           <Image src={img} alt={`Review by ${review.name}`} fill sizes="80px" className="object-cover group-hover:scale-110 transition-transform" />
                         </div>
                       ))}
                     </div>
@@ -392,9 +409,9 @@ export default function TestimonialsSection() {
                   </div>
                   
                   <div>
-                    <h4 className="text-[var(--off-white)] font-bold text-sm tracking-wide uppercase mb-1">
+                    <h3 className="text-[var(--off-white)] font-bold text-sm tracking-wide uppercase mb-1">
                       {review.name}
-                    </h4>
+                    </h3>
                     {review.role && (
                       <p className="text-[var(--warm-gray)] text-xs uppercase tracking-widest">
                         {review.role}

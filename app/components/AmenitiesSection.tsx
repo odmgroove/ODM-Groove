@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Coffee, Waves, Music, ArrowRight, Play, CirclePlay } from "lucide-react";
 
 const amenities = [
@@ -110,7 +111,7 @@ export default function AmenitiesSection() {
               })}
             </div>
 
-            <div className="pt-4">
+            <div className="pt-4 flex flex-wrap items-center gap-6">
               <a
                 href="#gallery"
                 className="inline-flex items-center gap-2 text-[var(--gold)] hover:text-[var(--gold-light)] font-medium text-sm tracking-wide transition-colors group"
@@ -118,55 +119,71 @@ export default function AmenitiesSection() {
                 View Full Gallery
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </a>
+              <Link
+                href="/nightlife-pool-ijoko-ifo"
+                className="inline-flex items-center gap-2 text-[var(--off-white)]/80 hover:text-[var(--gold)] font-medium text-sm tracking-wide transition-colors group"
+              >
+                Pool, Club &amp; Lounge Guide
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
           </div>
 
           {/* Right Column - Media Viewer */}
           <div className="lg:col-span-7 h-[500px] lg:h-[700px] relative rounded-sm overflow-hidden border border-[var(--gold)]/20 shadow-2xl group">
-            {amenities.map((item, idx) => (
-              <div
-                key={item.id}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  activeItem === idx ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
-              >
-                {item.isVideo ? (
-                  <video
-                    src={item.image}
-                    className="w-full h-full object-cover"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                  />
-                ) : (
-                  <Image
-                    src={item.image}
-                    alt={item.title}
-                    fill
-                    className="object-cover"
-                  />
-                )}
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                
-                {/* Now Playing Badge for Videos */}
-                {item.isVideo && (
-                  <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-white/10">
-                    <CirclePlay size={12} className="text-[var(--gold)]" />
-                    <span className="text-[10px] uppercase tracking-widest font-medium text-white/80">Playing</span>
+            {amenities.map((item, idx) => {
+              const isActive = activeItem === idx;
+              return (
+                <div
+                  key={item.id}
+                  className={`absolute inset-0 transition-opacity duration-1000 ${
+                    isActive ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                  }`}
+                  aria-hidden={!isActive}
+                >
+                  {item.isVideo ? (
+                    isActive ? (
+                      <video
+                        src={item.image}
+                        className="w-full h-full object-cover"
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        aria-label={`${item.title} video`}
+                      />
+                    ) : null
+                  ) : (
+                    <Image
+                      src={item.image}
+                      alt={`${item.title} at ODM Groove Hotel, Ijoko Ogbayo`}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 58vw"
+                      className="object-cover"
+                    />
+                  )}
+                  {/* Overlay gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+
+                  {/* Now Playing Badge for Videos */}
+                  {item.isVideo && isActive && (
+                    <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-2 border border-white/10">
+                      <CirclePlay size={12} className="text-[var(--gold)]" />
+                      <span className="text-[10px] uppercase tracking-widest font-medium text-white/80">Playing</span>
+                    </div>
+                  )}
+
+                  {/* Media caption */}
+                  <div className={`absolute bottom-8 left-8 right-8 transition-transform duration-700 delay-300 ${isActive ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+                    <p className="font-display text-3xl font-bold text-white mb-2">
+                      {item.title}
+                    </p>
+                    <div className="w-16 h-1 bg-[var(--gold)]" />
                   </div>
-                )}
-                
-                {/* Media caption */}
-                <div className={`absolute bottom-8 left-8 right-8 transition-transform duration-700 delay-300 ${activeItem === idx ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
-                  <p className="font-display text-3xl font-bold text-white mb-2" style={{ fontFamily: "Playfair Display, serif" }}>
-                    {item.title}
-                  </p>
-                  <div className="w-16 h-1 bg-[var(--gold)]" />
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

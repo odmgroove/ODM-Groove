@@ -8,8 +8,9 @@ export default function BookingCTASection() {
       <div className="absolute inset-0 z-0">
         <Image
           src="/Outdoor night view/odm-groove-nightlife-outdoor-1.jpg"
-          alt="ODM Groove Hotel at Night"
+          alt="ODM Groove Hotel outdoor lounge at night in Ijoko Ogbayo"
           fill
+          sizes="100vw"
           className="object-cover"
         />
         <div className="absolute inset-0 bg-black/80" />

@@ -1,38 +1,66 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "./components/ThemeProvider";
+import EventCountdownBanner from "./components/EventCountdownBanner";
+import { SITE_URL, getLandingJsonLd } from "./lib/seo";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "900"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+export const viewport: Viewport = {
+  themeColor: "#0a0a0a",
+  width: "device-width",
+  initialScale: 1,
+};
+
+const googleVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION;
+const bingVerification = process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://odmgroove.vercel.app/"),
+  metadataBase: new URL(`${SITE_URL}/`),
   title: {
-    default: "ODM Groove Hotel & Event Hall | Ijoko, Ogun State Nigeria",
+    default: "ODM Groove Hotel, Event Hall & Lounge | Ijoko, Ogba-Ayo, Ifo, Ogun State",
     template: "%s | ODM Groove Hotel",
   },
   description:
-    "ODM Groove Limited — a premium boutique hotel and event hall in Ijoko Ogbayo, Ogun State, near Lagos. Rooms from ₦30,000/night with free breakfast, WiFi, Netflix & DSTV. Book your stay today!",
+    "ODM Groove Limited — boutique hotel, lodge, swimming pool, nightclub & 200+ guest event hall in Ijoko Ogbayo (Ogba-Ayo), Aboki-Ifa, Ifo, Ogun State near Lagos. Rooms from ₦30,000/night with free breakfast, WiFi, Netflix & DSTV.",
   keywords: [
     "hotel in Ijoko Ogbayo",
-    "hotel in Ijoko Ogbayo",
-    "hotel near Lagos Nigeria",
+    "hotel in Ogba-Ayo",
+    "hotel in Ifo Ogun State",
+    "lodge in Ijoko Ifo",
+    "hotel near Aboki-Ifa Ijoko",
+    "event hall in Ijoko Ifo Ogun State",
+    "swimming pool in Ijoko Ogba-Ayo",
+    "nightclub and lounge in Ijoko Ifo",
+    "fun hangout spot in Ifo Ogun State",
+    "wedding and party hall near Lagos",
     "affordable hotel Ogun State",
-    "boutique hotel Ijoko",
-    "event hall Ogun State",
-    "wedding venue near Lagos",
-    "conference hall Nigeria",
-    "swimming pool hotel Nigeria",
     "ODM Groove Hotel",
     "ODM Groove Limited",
-    "Ijoko hotel",
-    "Ogun State accommodation",
-    "hotel with pool Nigeria",
-    "budget hotel near Lagos",
+    "hotel near Lagos Nigeria",
   ],
   authors: [{ name: "ODM Groove Limited" }],
   creator: "ODM Groove Limited",
   publisher: "ODM Groove Limited",
+  category: "hospitality",
   openGraph: {
     type: "website",
     locale: "en_NG",
-    url: "https://odmgroove.vercel.app/",
+    url: `${SITE_URL}/`,
     siteName: "ODM Groove Hotel & Event Hall",
     title: "ODM Groove Hotel & Event Hall | Ijoko Ogbayo, Ogun State",
     description:
@@ -42,6 +70,7 @@ export const metadata: Metadata = {
         url: "/odm-groove-hotel-exterior-daytime.jpg",
         width: 1200,
         height: 630,
+        type: "image/jpeg",
         alt: "ODM Groove Hotel exterior view - premium boutique hotel in Ijoko Ogbayo, Ogun State",
       },
     ],
@@ -51,7 +80,12 @@ export const metadata: Metadata = {
     title: "ODM Groove Hotel & Event Hall | Ijoko, Ogun State Nigeria",
     description:
       "Where luxury meets affordability. Book a room from ₦30,000/night with free breakfast, WiFi, Netflix & an event hall near Lagos.",
-    images: ["/odm-groove-hotel-exterior-daytime.jpg"],
+    images: [
+      {
+        url: "/odm-groove-hotel-exterior-daytime.jpg",
+        alt: "ODM Groove Hotel & Event Hall exterior in Ijoko Ogbayo, Ogun State",
+      },
+    ],
   },
   robots: {
     index: true,
@@ -64,106 +98,48 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "google-site-verification-placeholder",
-  },
+  ...(googleVerification || bingVerification
+    ? {
+        verification: {
+          ...(googleVerification ? { google: googleVerification } : {}),
+          ...(bingVerification
+            ? { other: { "msvalidate.01": bingVerification } }
+            : {}),
+        },
+      }
+    : {}),
   alternates: {
-    canonical: "https://odmgroove.vercel.app/",
+    canonical: `${SITE_URL}/`,
   },
 };
 
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": ["Hotel", "LocalBusiness"],
-  name: "ODM Groove Hotel & Event Hall",
-  alternateName: "ODM Groove Limited",
-  legalName: "ODM Groove Limited",
-  url: "https://odmgroove.vercel.app/",
-  logo: "https://odmgroove.vercel.app/logo.png",
-  image: [
-    "https://odmgroove.vercel.app/odm-groove-hotel-exterior-daytime.jpg",
-    "https://odmgroove.vercel.app/odm-groove-hotel-front-view.jpg",
-    "https://odmgroove.vercel.app/Room/odm-groove-hotel-room-30k-1.jpg",
-  ],
-  description:
-    "ODM Groove Limited is a premium boutique hotel and event hall located in Ijoko Ogbayo, Ogun State, Nigeria. Offering comfortable standard and deluxe rooms with free breakfast, WiFi, Netflix, DSTV, swimming pool, outdoor bar, rooftop lounge, and a versatile event hall.",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "Ola-Oparun, After Aboki Ifa Villa",
-    addressLocality: "Ijoko Ogbayo",
-    addressRegion: "Ogun State",
-    addressCountry: "NG",
-  },
-  geo: {
-    "@type": "GeoCoordinates",
-    latitude: "6.8969",
-    longitude: "3.2066",
-  },
-  priceRange: "₦₦",
-  currenciesAccepted: "NGN",
-  paymentAccepted: "Cash, Bank Transfer",
-  openingHoursSpecification: [
-    {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: [
-        "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday",
-      ],
-      opens: "00:00",
-      closes: "23:59",
-    },
-  ],
-  amenityFeature: [
-    { "@type": "LocationFeatureSpecification", name: "Swimming Pool", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Free WiFi", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Free Breakfast", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Netflix", value: true },
-    { "@type": "LocationFeatureSpecification", name: "DSTV", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Event Hall", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Outdoor Bar", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Rooftop Lounge", value: true },
-    { "@type": "LocationFeatureSpecification", name: "24/7 Security", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Parking", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Air Conditioning", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Snooker", value: true },
-    { "@type": "LocationFeatureSpecification", name: "Football", value: true },
-  ],
-  numberOfRooms: "Multiple",
-  starRating: { "@type": "Rating", ratingValue: "4" },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.7",
-    reviewCount: "124",
-    bestRating: "5",
-    worstRating: "1",
-  },
-  foundingDate: "2024",
-  sameAs: [],
-};
-
-import { ThemeProvider } from "./components/ThemeProvider";
-import EventCountdownBanner from "./components/EventCountdownBanner";
+const baseStructuredData = getLandingJsonLd();
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en-NG" suppressHydrationWarning>
+    <html
+      lang="en-NG"
+      className={`${inter.variable} ${playfair.variable}`}
+      suppressHydrationWarning
+    >
       <head>
-        <meta name="theme-color" content="#0a0a0a" />
         <meta name="geo.region" content="NG-OG" />
         <meta name="geo.placename" content="Ijoko Ogbayo, Ogun State, Nigeria" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
+        <meta name="geo.position" content="6.8086802;3.2651657" />
+        <meta name="ICBM" content="6.8086802, 3.2651657" />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(baseStructuredData),
+          }}
         />
       </head>
-      <body className="antialiased min-h-screen bg-[var(--black)] text-[var(--off-white)] transition-colors duration-300" suppressHydrationWarning>
+      <body
+        className="antialiased min-h-screen bg-[var(--black)] text-[var(--off-white)] transition-colors duration-300"
+        suppressHydrationWarning
+      >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <EventCountdownBanner />
           {children}

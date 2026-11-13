@@ -1,17 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import Image from "next/image";
 import { ChevronDown, Calendar, BedDouble, Coffee, Wifi, Waves, PartyPopper } from "lucide-react";
 
 export default function HeroSection() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [videoLoaded, setVideoLoaded] = useState(false);
-  const [textVisible, setTextVisible] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setTextVisible(true), 300);
-    return () => clearTimeout(timer);
-  }, []);
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -24,7 +19,18 @@ export default function HeroSection() {
       className="relative w-full h-screen min-h-[600px] overflow-hidden"
       aria-label="ODM Groove Hotel hero - Where Luxury Meets Affordability"
     >
-      {/* Video Background */}
+      {/* Priority LCP Poster Image */}
+      <Image
+        src="/odm-groove-hotel-exterior-daytime.jpg"
+        alt="ODM Groove Hotel exterior view - Ijoko Ogbayo, Ogun State"
+        fill
+        priority
+        fetchPriority="high"
+        sizes="100vw"
+        className="object-cover"
+      />
+
+      {/* Video Background (streams progressively without blocking LCP) */}
       <video
         ref={videoRef}
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1500 ${
@@ -34,23 +40,13 @@ export default function HeroSection() {
         muted
         loop
         playsInline
-        preload="auto"
+        preload="metadata"
         poster="/odm-groove-hotel-exterior-daytime.jpg"
         onCanPlayThrough={() => setVideoLoaded(true)}
         aria-label="ODM Groove Hotel overview video"
       >
         <source src="/odm-groove-hotel-overview.mp4" type="video/mp4" />
       </video>
-
-      {/* Fallback Image (while video loads) */}
-      {!videoLoaded && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src="/odm-groove-hotel-exterior-daytime.jpg"
-          alt="ODM Groove Hotel exterior view - Ijoko Ogbayo, Ogun State"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      )}
 
       {/* Multi-layer Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/85 z-10" />
@@ -59,13 +55,9 @@ export default function HeroSection() {
       {/* Decorative gold line */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[var(--gold)]/40 to-transparent z-20" />
 
-      {/* Content */}
+      {/* Content — immediately visible on SSR for optimal LCP */}
       <div className="relative z-20 h-full flex flex-col items-center justify-center text-center px-5 md:px-8">
-        <div
-          className={`max-w-4xl mx-auto transition-all duration-1000 ${
-            textVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
-          }`}
-        >
+        <div className="max-w-4xl mx-auto">
           {/* Eyebrow label */}
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="h-px w-10 bg-[var(--gold)]/60" />
@@ -78,7 +70,6 @@ export default function HeroSection() {
           {/* Main Heading */}
           <h1
             className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-5 text-white"
-            style={{ fontFamily: "Playfair Display, serif" }}
           >
             Where Luxury Meets{" "}
             <span className="gradient-text italic">Affordability</span>

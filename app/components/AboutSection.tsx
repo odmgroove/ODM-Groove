@@ -127,14 +127,15 @@ export default function AboutSection() {
             <p className="text-[var(--warm-gray)] leading-relaxed text-base">
               Established in 2024, ODM Groove Limited was built on a simple belief:
               that premium hospitality should be accessible to everyone. Nestled on
-              Shonekan Street, Ola-Oparun in Ijoko Ogbayo — just minutes from
-              Lagos — we bring you a sanctuary where modern comfort and
-              warm Nigerian hospitality converge.
+              Shonekan Street, Ola-Oparun, after Aboki-Ifa Villa in Ijoko Ogbayo
+              (Ogba-Ayo), Ifo LGA, Ogun State — just minutes from Lagos — we bring
+              you a sanctuary where modern comfort and warm Nigerian hospitality converge.
             </p>
             <p className="text-[var(--warm-gray)] leading-relaxed text-base">
-              Whether you&apos;re here for a relaxing staycation, a business trip, or
-              planning a grand event, ODM Groove offers an unparalleled experience
-              with world-class amenities at truly competitive prices.
+              Whether you&apos;re looking to lodge for a quiet weekend staycation,
+              take a refreshing swim, party at our nightclub and rooftop lounge, or
+              book a 200+ guest event hall for a wedding or celebration, ODM Groove
+              delivers world-class experiences at truly competitive prices.
             </p>
 
             <div className="space-y-3 pt-2">

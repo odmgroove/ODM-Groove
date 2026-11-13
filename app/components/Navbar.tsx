@@ -71,6 +71,7 @@ export default function Navbar() {
                   src="/logo.png"
                   alt="ODM Groove Hotel logo"
                   fill
+                  sizes="(max-width: 768px) 96px, 144px"
                   className="object-contain"
                   priority
                 />
@@ -190,8 +191,8 @@ export default function Navbar() {
                     src="/logo.png"
                     alt="ODM Groove Hotel logo"
                     fill
+                    sizes="96px"
                     className="object-contain"
-                    priority
                   />
                 </span>
                 <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--warm-gray)] font-medium">
@@ -208,7 +209,7 @@ export default function Navbar() {
             </button>
           </div>
 
-          <nav className="flex-1 p-6 overflow-y-auto">
+          <nav className="flex-1 p-6 overflow-y-auto" aria-label="Mobile navigation">
             <ul className="space-y-1">
               {navLinks.map((link) => {
                 const id = link.href.replace("/#", "");
